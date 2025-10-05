@@ -40,6 +40,22 @@ jobs:
           zip -r "dist/${ZIP_NAME}" src/ bin/ composer.json LICENSE README.md CHANGELOG.md ROADMAP.md VISION.md phpunit.xml.dist .github/workflows/release.yml docs/ || echo "No docs folder"
           echo "✅ Created dist/${ZIP_NAME}"
 
+      - name: Check distributable content
+        run: |
+          ZIP_FILE="dist/object-foundation-${GITHUB_REF_NAME}.zip"
+          echo "🔍 Verifying contents of $ZIP_FILE"
+          unzip -l "$ZIP_FILE" | tee dist/zip_contents.txt
+
+          REQUIRED=("src/" "composer.json" "README.md" "LICENSE")
+          for ITEM in "${REQUIRED[@]}"; do
+            if ! unzip -l "$ZIP_FILE" | grep -q "$ITEM"; then
+              echo "❌ Missing required file or folder: $ITEM"
+              exit 1
+            fi
+          done
+
+          echo "✅ All required items are present in $ZIP_FILE"
+
       - name: Update changelog date
         run: |
           TAG=${GITHUB_REF_NAME}
