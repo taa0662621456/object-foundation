@@ -34,3 +34,17 @@ $application->add(new FoundationOntologyOpenapiCommand());
 use ObjectFoundation\Command\FoundationOntologyQueryCommand;
 
 $application->add(new FoundationOntologyQueryCommand());
+
+use ObjectFoundation\Command\FoundationReactionListCommand;
+use ObjectFoundation\Command\FoundationReactionEnableCommand;
+use ObjectFoundation\Command\FoundationReactionDisableCommand;
+use ObjectFoundation\Command\FoundationTraitsListCommand;
+use ObjectFoundation\Command\FoundationTraitsDescribeCommand;
+use ObjectFoundation\Command\FoundationEntityMappingDumpCommand;
+
+$application->add(new FoundationReactionListCommand());
+$application->add(new FoundationReactionEnableCommand());
+$application->add(new FoundationReactionDisableCommand());
+$application->add(new FoundationTraitsListCommand());
+$application->add(new FoundationTraitsDescribeCommand());
+$application->add(new FoundationEntityMappingDumpCommand());

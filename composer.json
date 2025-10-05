@@ -41,7 +41,7 @@
   "bin": [
     "bin/foundation"
   ],
-  "version": "1.7.0-pre",
+  "version": "1.8.0-pre",
   "extra": {
     "object-foundation-next-horizon": "visionary roadmap 1.5\u20133.0"
   }
