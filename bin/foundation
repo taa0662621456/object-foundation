@@ -1,71 +1,10 @@
 #!/usr/bin/env php
 <?php
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-use ObjectFoundation\Command\FoundationEntityInfoCommand;
+use ObjectFoundation\Bridge\Symfony\Command\FoundationExampleCommand;
 
-$application = new Application('Object Foundation CLI', '1.x');
-$application->add(new FoundationEntityInfoCommand());
+$application = new Application('Object Foundation CLI', 'v2.5.1-beta');
+$application->add(new FoundationExampleCommand());
 $application->run();
-
-use ObjectFoundation\Command\FoundationConfigEncryptCommand;
-use ObjectFoundation\Command\FoundationConfigRotateKeyCommand;
-
-$application->add(new FoundationConfigEncryptCommand());
-$application->add(new FoundationConfigRotateKeyCommand());
-
-use ObjectFoundation\Command\FoundationOntologyExportCommand;
-use ObjectFoundation\Command\FoundationOntologyInspectCommand;
-use ObjectFoundation\Command\FoundationLocaleScanCommand;
-
-$application->add(new FoundationOntologyExportCommand());
-$application->add(new FoundationOntologyInspectCommand());
-$application->add(new FoundationLocaleScanCommand());
-
-use ObjectFoundation\Command\FoundationEntityInitCommand;
-use ObjectFoundation\Command\FoundationOntologyGraphqlCommand;
-use ObjectFoundation\Command\FoundationOntologyOpenapiCommand;
-
-$application->add(new FoundationEntityInitCommand());
-$application->add(new FoundationOntologyGraphqlCommand());
-$application->add(new FoundationOntologyOpenapiCommand());
-
-use ObjectFoundation\Command\FoundationOntologyQueryCommand;
-
-$application->add(new FoundationOntologyQueryCommand());
-
-use ObjectFoundation\Command\FoundationReactionListCommand;
-use ObjectFoundation\Command\FoundationReactionEnableCommand;
-use ObjectFoundation\Command\FoundationReactionDisableCommand;
-use ObjectFoundation\Command\FoundationTraitsListCommand;
-use ObjectFoundation\Command\FoundationTraitsDescribeCommand;
-use ObjectFoundation\Command\FoundationEntityMappingDumpCommand;
-
-$application->add(new FoundationReactionListCommand());
-$application->add(new FoundationReactionEnableCommand());
-$application->add(new FoundationReactionDisableCommand());
-$application->add(new FoundationTraitsListCommand());
-$application->add(new FoundationTraitsDescribeCommand());
-$application->add(new FoundationEntityMappingDumpCommand());
-
-use ObjectFoundation\Command\FoundationAtomicCheckCommand;
-$application->add(new FoundationAtomicCheckCommand());
-
-use ObjectFoundation\Command\FoundationApiOpenapiGenerateCommand;
-$application->add(new FoundationApiOpenapiGenerateCommand());
-
-use ObjectFoundation\Command\FoundationApiKeyGenerateCommand;
-$application->add(new FoundationApiKeyGenerateCommand());
-
-use ObjectFoundation\Command\FoundationCacheFlushCommand;
-$application->add(new FoundationCacheFlushCommand());
-
-use ObjectFoundation\Command\FoundationMetricsReportCommand;
-$application->add(new FoundationMetricsReportCommand());
-
-use ObjectFoundation\Command\FoundationOutboxDispatchCommand;
-$application->add(new FoundationOutboxDispatchCommand());
-
-use ObjectFoundation\Command\FoundationOutboxPurgeCommand;
-$application->add(new FoundationOutboxPurgeCommand());

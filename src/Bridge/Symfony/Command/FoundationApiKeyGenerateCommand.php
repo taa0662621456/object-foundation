@@ -1,5 +1,5 @@
 <?php
-namespace ObjectFoundation\Command;
+namespace ObjectFoundation\Bridge\Symfony\Command;
 
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
