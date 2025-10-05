@@ -48,3 +48,6 @@ $application->add(new FoundationReactionDisableCommand());
 $application->add(new FoundationTraitsListCommand());
 $application->add(new FoundationTraitsDescribeCommand());
 $application->add(new FoundationEntityMappingDumpCommand());
+
+use ObjectFoundation\Command\FoundationAtomicCheckCommand;
+$application->add(new FoundationAtomicCheckCommand());

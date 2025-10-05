@@ -1,9 +1,9 @@
-name: Release v1.9.0-beta
+name: Release v2.0.0-beta
 
 on:
   push:
     tags:
-      - 'v1.9.0-beta'
+      - 'v2.0.0-beta'
   workflow_dispatch:
 
 jobs:
@@ -28,10 +28,10 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v1.9.0-beta
-          name: Object Foundation v1.9.0-beta
+          tag_name: v2.0.0-beta
+          name: Object Foundation v2.0.0-beta
           body: |
-            ## Object Foundation v1.9.0-beta
+            ## Object Foundation v2.0.0-beta
             - Stable Reaction System
             - Traits Catalog
             - Mapping Generator
