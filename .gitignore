@@ -1,0 +1,109 @@
+# =========================
+# Composer / PHP
+# =========================
+/vendor/
+/composer.lock
+/composer.phar
+
+# =========================
+# PHPUnit / Coverage
+# =========================
+/phpunit.xml
+/phpunit.xml.cache
+/.phpunit.result.cache
+/build/
+coverage/
+reports/
+
+# =========================
+# Symfony cache & logs
+# =========================
+/var/
+/cache/
+/logs/
+/config/jwt/private.pem
+/config/jwt/public.pem
+
+# =========================
+# IDE & System
+# =========================
+# JetBrains
+/.idea/
+/.idea/*
+# VSCode
+.vscode/
+# NetBeans
+nbproject/
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# OS / Editor files
+# =========================
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.swp
+*.swo
+*~
+~$*
+
+# =========================
+# Distribution / Artifacts
+# =========================
+*.zip
+*.tar.gz
+*.tgz
+/dist/
+/contrib/*.zip
+
+# =========================
+# Local testing & sandbox
+# =========================
+sandbox/
+examples/*/var/
+examples/*/vendor/
+examples/*/.env
+examples/*/.env.local
+examples/*/.cache
+examples/*/node_modules/
+
+# =========================
+# Node / Front assets
+# =========================
+/node_modules/
+/public/build/
+/yarn.lock
+/package-lock.json
+
+# =========================
+# Docker / Vagrant / CI
+# =========================
+.docker/
+docker-compose.override.yml
+.vagrant/
+.env
+.env.local
+.env.test
+.env.dev
+
+# =========================
+# Logs
+# =========================
+*.log
+*.err
+*.out
+
+# =========================
+# Misc
+# =========================
+/.idea_modules/
+/.php-cs-fixer.cache
+rector.php
+rector.log
+infection.log
+psalm.xml
+phpstan.neon
+phpstan.neon.dist
