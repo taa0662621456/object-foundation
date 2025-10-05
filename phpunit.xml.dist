@@ -1,1 +1,52 @@
-<phpunit><php><env name='OBJECT_FOUNDATION_BRAND' value='Smartresponsor'/></php></phpunit>
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ─────────────────────────────────────────────────────────────────────────────
+   Smartresponsor / Object Foundation
+   PHPUnit Configuration (for CI + local development)
+ ─────────────────────────────────────────────────────────────────────────────
+   Compatible with PHPUnit >=10.5
+   Automatically outputs TestDox to console (php://stdout)
+   Uses vendor/autoload.php as bootstrap
+ ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+        bootstrap="vendor/autoload.php"
+        colors="true"
+        displayDetailsOnIncompleteTests="true"
+        displayDetailsOnSkippedTests="true"
+        executionOrder="depends,defects"
+        cacheResult="false"
+>
+
+    <!-- #region Environment -->
+    <php>
+        <env name="OBJECT_FOUNDATION_BRAND" value="Smartresponsor"/>
+        <env name="APP_ENV" value="test"/>
+        <env name="APP_DEBUG" value="1"/>
+    </php>
+    <!-- #endregion -->
+
+    <!-- #region Logging -->
+    <logging>
+        <!-- Text-based TestDox output directly to stdout -->
+        <testdoxText outputFile="php://stdout"/>
+        <!-- You can also add JUnit or coverage logs here later -->
+        <!--
+        <junit outputFile="var/logs/junit.xml"/>
+        <coverage-html outputDirectory="var/coverage"/>
+        -->
+    </logging>
+    <!-- #endregion -->
+
+    <!-- #region Test Suites -->
+    <testsuites>
+        <testsuite name="ObjectFoundation Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <!-- #endregion -->
+
+</phpunit>
