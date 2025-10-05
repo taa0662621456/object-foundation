@@ -18,6 +18,54 @@ jobs:
         with:
           fetch-depth: 0
 
+      # --- YAML VALIDATION ---
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-cache-${{ hashFiles('.github/workflows/**/*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-cache-
+
+      - name: Setup YAML validator
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y yamllint
+
+      - name: Validate workflow YAMLs
+        run: |
+          echo "🔍 Validating YAML files..."
+          yamllint -f parsable -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/ | tee yamllint-report.txt
+          if grep -q "error" yamllint-report.txt; then
+            echo "❌ YAML syntax errors found" >> $GITHUB_STEP_SUMMARY
+            cat yamllint-report.txt >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ YAML syntax OK" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload yamllint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yamllint-report-release
+          path: yamllint-report.txt
+          retention-days: 7
+
+      # --- COMPOSER VALIDATION & AUDIT ---
+      - name: Validate composer.json
+        run: |
+          echo "🔍 Validating composer.json..."
+          composer validate --strict
+          echo "✅ composer.json validation passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Composer audit (security check)
+        run: |
+          echo "🔐 Running composer audit..."
+          composer audit --no-interaction || (echo "❌ Vulnerabilities found!" >> $GITHUB_STEP_SUMMARY && exit 1)
+          echo "✅ composer audit passed (no vulnerabilities)" >> $GITHUB_STEP_SUMMARY
+
+      # --- PHP BUILD & RELEASE ---
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -67,7 +115,6 @@ jobs:
           ZIP_FILE="dist/object-foundation-${GITHUB_REF_NAME}.zip"
           echo "🔍 Verifying contents of $ZIP_FILE"
           unzip -l "$ZIP_FILE" | tee dist/zip_contents.txt
-
           REQUIRED=("src/" "composer.json" "README.md" "LICENSE")
           for ITEM in "${REQUIRED[@]}"; do
             if ! unzip -l "$ZIP_FILE" | grep -q "$ITEM"; then
@@ -134,12 +181,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger Packagist update
-        if: ${{ secrets.PACKAGIST_USERNAME != '' && secrets.PACKAGIST_TOKEN != '' }}
+        if: ${{ env.PACKAGIST_USERNAME && env.PACKAGIST_TOKEN }}
+        env:
+          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
         run: |
           echo "🔄 Triggering Packagist update..."
           curl -XPOST -H 'content-type:application/json' \
             -d "{\"repository\":{\"url\":\"https://github.com/${GITHUB_REPOSITORY}\"}}" \
-            "https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}"
+            "https://packagist.org/api/update-package?username=${PACKAGIST_USERNAME}&apiToken=${PACKAGIST_TOKEN}"
           echo "✅ Packagist update triggered"
 
   deploy-docs:
@@ -154,6 +204,33 @@ jobs:
         with:
           fetch-depth: 0
 
+      # --- YAML VALIDATION ---
+      - name: Setup YAML validator
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y yamllint
+
+      - name: Validate workflow YAMLs
+        run: |
+          echo "🔍 Validating YAML files..."
+          yamllint -f parsable -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/ | tee yamllint-report.txt
+          if grep -q "error" yamllint-report.txt; then
+            echo "❌ YAML syntax errors found" >> $GITHUB_STEP_SUMMARY
+            cat yamllint-report.txt >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ YAML syntax OK" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload yamllint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yamllint-report-deploy-docs
+          path: yamllint-report.txt
+          retention-days: 7
+
+      # --- DOCS DEPLOY ---
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
