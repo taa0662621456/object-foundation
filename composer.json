@@ -29,7 +29,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "ObjectFoundation\\Tests\\": "tests/"
+      "ObjectFoundation\\Tests\\": "tests/",
+      "Examples\\SymfonyDemo\\": "tests/Examples/SymfonyDemo/"
     }
   },
   "minimum-stability": "stable",
