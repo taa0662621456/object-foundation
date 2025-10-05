@@ -1,14 +1,17 @@
-name: Release v2.5.0-beta
+name: Release v2.x
 
 on:
   push:
     tags:
-      - 'v2.5.0-beta'
+      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,7 +20,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, json, intl, pdo, pdo_mysql, xml, dom, curl, zip
+          extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress
@@ -29,25 +32,131 @@ jobs:
         run: |
           php bin/foundation foundation:api:openapi:generate -f json -o var/export/openapi.json
           php bin/foundation foundation:api:openapi:generate -f yaml -o var/export/openapi.yaml
-          vendor/bin/phpunit --testdox --colors=always
 
-      - name: Create GitHub release
+      - name: Update changelog date
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          DATE=$(date +'%Y-%m-%d')
+          sed -i "s/## $TAG.*/## $TAG - $DATE/" CHANGELOG.md
+
+      - name: Post-release: create next unreleased section
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          NEW_HEADER="## vNEXT - unreleased
+### 🆕 Added
+- (placeholder)
+
+### ♻️ Changed
+- (placeholder)
+
+### 🪲 Fixed
+- (placeholder)
+
+### ⚡ Improved
+- (placeholder)
+
+---
+"
+          TEMP_FILE=$(mktemp)
+          { echo -e "$NEW_HEADER"; cat CHANGELOG.md; } > "$TEMP_FILE"
+          mv "$TEMP_FILE" CHANGELOG.md
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: add unreleased section after $TAG"
+          git push || echo "No push (detached head)"
+
+      - name: Generate RELEASE_NOTES.md from CHANGELOG
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          awk "/## $TAG/{flag=1;next}/^## /{flag=0}flag" CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "Release notes for $TAG" > RELEASE_NOTES.md
+          fi
+
+      - name: Format RELEASE_NOTES.md for GitHub
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          TITLE="# 🧠 Object Foundation — $TAG"
+          DATE=$(date +'%Y-%m-%d')
+          TEMP_FILE=$(mktemp)
+          {
+            echo "$TITLE"
+            echo ""
+            echo "_Auto-generated on $DATE_"
+            echo ""
+            echo "🚀 **This release was built and published automatically via CI/CD.**"
+            echo ""
+            cat RELEASE_NOTES.md
+          } > "$TEMP_FILE"
+          mv "$TEMP_FILE" RELEASE_NOTES.md
+
+      - name: Generate short release summary
+        id: summary
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          SUMMARY=$(awk '/### 🆕 Added/{flag=1;next}/^### /{flag=0}flag' CHANGELOG.md | head -n 1 | sed 's/^- *//')
+          if [ -z "$SUMMARY" ]; then
+            SUMMARY="Automated release for $TAG"
+          fi
+          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v2.0.0-beta
-          name: Object Foundation v2.0.0-beta
-          body: |
-            OpenAPI spec attached as release assets.
-            ## Object Foundation v2.0.0-beta
-            - Stable Reaction System
-            - Traits Catalog
-            - Mapping Generator
-            - Ready for Packagist publication
+          tag_name: ${{ github.ref_name }}
+          name: Object Foundation ${{ github.ref_name }} — ${{ steps.summary.outputs.summary }}
+          body_path: RELEASE_NOTES.md
           files: |
             var/export/openapi.json
             var/export/openapi.yaml
+            dist/object-foundation-${{ github.ref_name }}.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Trigger Packagist update
-        run: curl -XPOST -H 'content-type:application/json' -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}' "https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}"
+        run: |
+          curl -XPOST -H 'content-type:application/json'           -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'           https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
+
+      - name: Update Packagist description
+        if: ${{ secrets.PACKAGIST_USERNAME && secrets.PACKAGIST_TOKEN }}
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          SUMMARY="${{ steps.summary.outputs.summary }}"
+          DESCRIPTION=$(echo "$SUMMARY" | sed 's/"/\"/g')
+          curl -X PATCH "https://packagist.org/api/update-package.json"                -H "Content-Type: application/json"                -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}"                -d "{"repository":{"url":"https://github.com/${{ github.repository }}","description":"$DESCRIPTION"}}"
+
+      - name: Ensure package exists on Packagist
+        if: ${{ secrets.PACKAGIST_USERNAME && secrets.PACKAGIST_TOKEN }}
+        run: |
+          REPO_URL="https://github.com/${{ github.repository }}"
+          EXISTS=$(curl -s "https://packagist.org/packages/${{ github.repository | toLower }}" | grep -c '"package":')
+          if [ "$EXISTS" -eq 0 ]; then
+            curl -X POST "https://packagist.org/api/create-package.json"               -H "Content-Type: application/json"               -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}"               -d "{"repository":{"url":"$REPO_URL"}}"
+          fi
+
+      - name: Safe retry Packagist publish
+        if: ${{ secrets.PACKAGIST_USERNAME && secrets.PACKAGIST_TOKEN }}
+        run: |
+          REPO_URL="https://github.com/${{ github.repository }}"
+          MAX_RETRIES=3
+          RETRY_DELAY=15
+          COUNT=1
+
+          while [ $COUNT -le $MAX_RETRIES ]; do
+            HTTP_CODE=$(curl -s -o /tmp/resp.json -w "%{http_code}"               -X POST "https://packagist.org/api/update-package.json"               -H "Content-Type: application/json"               -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}"               -d "{"repository":{"url":"$REPO_URL"}}" || echo "000")
+
+            if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "201" ]]; then
+              cat /tmp/resp.json
+              break
+            elif [[ "$HTTP_CODE" == "403" || "$HTTP_CODE" == "429" || "$HTTP_CODE" =~ ^5 ]]; then
+              sleep $RETRY_DELAY
+              ((COUNT++))
+            else
+              cat /tmp/resp.json
+              exit 1
+            fi
+          done
+          if [ $COUNT -gt $MAX_RETRIES ]; then
+            exit 1
+          fi
