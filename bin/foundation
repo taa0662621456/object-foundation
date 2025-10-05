@@ -8,3 +8,9 @@ use ObjectFoundation\Command\FoundationEntityInfoCommand;
 $application = new Application('Object Foundation CLI', '1.x');
 $application->add(new FoundationEntityInfoCommand());
 $application->run();
+
+use ObjectFoundation\Command\FoundationConfigEncryptCommand;
+use ObjectFoundation\Command\FoundationConfigRotateKeyCommand;
+
+$application->add(new FoundationConfigEncryptCommand());
+$application->add(new FoundationConfigRotateKeyCommand());
