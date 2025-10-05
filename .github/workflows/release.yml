@@ -30,6 +30,7 @@ jobs:
 
       - name: Generate OpenAPI spec
         run: |
+          mkdir -p var/export
           php bin/foundation foundation:api:openapi:generate -f json -o var/export/openapi.json
           php bin/foundation foundation:api:openapi:generate -f yaml -o var/export/openapi.yaml
 
@@ -37,7 +38,9 @@ jobs:
         run: |
           mkdir -p dist
           ZIP_NAME="object-foundation-${GITHUB_REF_NAME}.zip"
-          zip -r "dist/${ZIP_NAME}" src/ bin/ composer.json LICENSE README.md CHANGELOG.md ROADMAP.md VISION.md phpunit.xml.dist .github/workflows/release.yml docs/ || echo "No docs folder"
+          zip -r "dist/${ZIP_NAME}" \
+            src/ bin/ composer.json LICENSE README.md CHANGELOG.md ROADMAP.md VISION.md phpunit.xml.dist .github/workflows/release.yml docs/ \
+            || echo "⚠️ No docs folder found"
           echo "✅ Created dist/${ZIP_NAME}"
 
       - name: Check distributable content
@@ -53,7 +56,6 @@ jobs:
               exit 1
             fi
           done
-
           echo "✅ All required items are present in $ZIP_FILE"
 
       - name: Upload build artifacts
@@ -70,7 +72,9 @@ jobs:
         run: |
           TAG=${GITHUB_REF_NAME}
           DATE=$(date +'%Y-%m-%d')
-          sed -i "s/## $TAG.*/## $TAG - $DATE/" CHANGELOG.md
+          if grep -q "## $TAG" CHANGELOG.md; then
+            sed -i "s/## $TAG.*/## $TAG - $DATE/" CHANGELOG.md
+          fi
 
       - name: Generate RELEASE_NOTES.md from CHANGELOG
         run: |
@@ -79,6 +83,7 @@ jobs:
           if [ ! -s RELEASE_NOTES.md ]; then
             echo "Release notes for $TAG" > RELEASE_NOTES.md
           fi
+          echo "✅ RELEASE_NOTES.md generated"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -91,11 +96,16 @@ jobs:
             var/export/openapi.yaml
             dist/object-foundation-${{ github.ref_name }}.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger Packagist update
+        if: ${{ secrets.PACKAGIST_USERNAME != '' && secrets.PACKAGIST_TOKEN != '' }}
         run: |
-          curl -XPOST -H 'content-type:application/json'           -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'           https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
+          echo "🔄 Triggering Packagist update..."
+          curl -XPOST -H 'content-type:application/json' \
+            -d "{\"repository\":{\"url\":\"https://github.com/${GITHUB_REPOSITORY}\"}}" \
+            "https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}"
+          echo "✅ Packagist update triggered"
 
   deploy-docs:
     needs: release
@@ -140,6 +150,7 @@ jobs:
           </body>
           </html>
           HTML
+          echo "✅ Swagger UI prepared"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
