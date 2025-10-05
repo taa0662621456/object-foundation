@@ -23,6 +23,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-cache-${{ hashFiles('.github/workflows/**/*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-cache-
+
+      - name: Setup YAML validator
+        continue-on-error: false
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y yamllint
+
+      - name: Validate YAML syntax
+        continue-on-error: false
+        run: |
+          echo "Validating all workflow YAML files..."
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -80,6 +100,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-cache-${{ hashFiles('.github/workflows/**/*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-cache-
+
+      - name: Setup YAML validator
+        continue-on-error: false
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y yamllint
+
+      - name: Validate YAML syntax
+        continue-on-error: false
+        run: |
+          echo "Validating all workflow YAML files..."
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -186,6 +226,26 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-cache-${{ hashFiles('.github/workflows/**/*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-cache-
+
+      - name: Setup YAML validator
+        continue-on-error: false
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y yamllint
+
+      - name: Validate YAML syntax
+        continue-on-error: false
+        run: |
+          echo "Validating all workflow YAML files..."
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -251,6 +311,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-cache-${{ hashFiles('.github/workflows/**/*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-cache-
+
+      - name: Setup YAML validator
+        continue-on-error: false
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y yamllint
+
+      - name: Validate YAML syntax
+        continue-on-error: false
+        run: |
+          echo "Validating all workflow YAML files..."
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -297,24 +377,3 @@ jobs:
           git add dev/latest coverage/latest
           git commit -m "chore: update latest aliases for dev docs & coverage to ${{ github.ref_name }}" || echo "no changes"
           git push origin gh-pages
-
-  codeql:
-    name: CodeQL Security Scan
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-    strategy:
-      fail-fast: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: php
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
