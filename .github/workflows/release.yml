@@ -56,6 +56,16 @@ jobs:
 
           echo "✅ All required items are present in $ZIP_FILE"
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: object-foundation-${{ github.ref_name }}
+          path: |
+            dist/object-foundation-${{ github.ref_name }}.zip
+            var/export/openapi.json
+            var/export/openapi.yaml
+          retention-days: 30
+
       - name: Update changelog date
         run: |
           TAG=${GITHUB_REF_NAME}
