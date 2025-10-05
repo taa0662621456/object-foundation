@@ -60,3 +60,6 @@ $application->add(new FoundationApiKeyGenerateCommand());
 
 use ObjectFoundation\Command\FoundationCacheFlushCommand;
 $application->add(new FoundationCacheFlushCommand());
+
+use ObjectFoundation\Command\FoundationMetricsReportCommand;
+$application->add(new FoundationMetricsReportCommand());

@@ -5,11 +5,14 @@ use ObjectFoundation\Ontology\Oql\{Parser, Executor};
 use ObjectFoundation\Ontology\Support\ManifestCollector;
 use ObjectFoundation\Ontology\Exporter\JsonLdExporter;
 use ObjectFoundation\Cache\ManifestCache;
+use ObjectFoundation\Api\Observability\RequestLogger;
+use ObjectFoundation\Api\Observability\MetricsCollector;
 use ObjectFoundation\Api\Security\Auth;
 use ObjectFoundation\Api\Security\RateLimiter;
 use ObjectFoundation\Api\OpenApiGenerator;
 
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$__of_t0 = microtime(true);
 $method = $_SERVER['REQUEST_METHOD'];
 
 use ObjectFoundation\Api\Security\Auth;
@@ -85,6 +88,19 @@ function respond_json($data, int $code = 200, string $contentType = 'application
 }
 
 try {
+    if ($path === '/api/metrics') {
+        $mc = new MetricsCollector();
+        $snap = $mc->snapshot();
+        $export = getenv('OBJECT_FOUNDATION_METRICS_EXPORT');
+        $export = ($export === false) ? true : (strtolower($export) !== 'false' && $export !== '0');
+        if ($export && ($_GET['format'] ?? '') === 'prometheus') {
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $mc->toPrometheus($snap);
+            exit;
+        }
+        respond_json($snap);
+    }
+
     if ($path === '/api/openapi.json') {
         $gen = new OpenApiGenerator();
         $json = $gen->toJson($gen->build());
@@ -185,3 +201,27 @@ HTML;
 } catch (Throwable $e) {
     respond_json(['error'=>$e->getMessage()], 500);
 }
+
+// ---- Observability: finalize ----
+register_shutdown_function(function() use($__of_t0, $path) {
+    $duration = (microtime(true) - $__of_t0) * 1000.0;
+    $status = http_response_code() ?: 200;
+    $logger = new \ObjectFoundation\Api\Observability\RequestLogger();
+    $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? ($_SERVER['Authorization'] ?? '');
+    $authType = str_starts_with($authHeader, 'ApiKey ') ? 'ApiKey' : (str_starts_with($authHeader, 'Bearer ') ? 'Bearer' : '');
+    $cacheHit = headers_list();
+    $cacheHitFlag = false;
+    foreach ($cacheHit as $h) { if (stripos($h, 'ETag:') === 0) { $cacheHitFlag = true; break; } }
+    $logger->log([
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+        'method' => $_SERVER['REQUEST_METHOD'] ?? '',
+        'path' => $path,
+        'status' => $status,
+        'duration_ms' => round($duration, 2),
+        'user_agent' => $ua,
+        'auth' => $authType,
+        'cache_hit' => $cacheHitFlag
+    ]);
+    (new \ObjectFoundation\Api\Observability\MetricsCollector())->addRequest($duration, $status, $cacheHitFlag, $status===401);
+});

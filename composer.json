@@ -44,7 +44,7 @@
   "bin": [
     "bin/foundation"
   ],
-  "version": "2.3.0-beta",
+  "version": "2.4.0-beta",
   "extra": {
     "object-foundation-next-horizon": "visionary roadmap 1.5\u20133.0"
   },
