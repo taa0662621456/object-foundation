@@ -25,7 +25,10 @@
   "autoload": {
     "psr-4": {
       "ObjectFoundation\\": "src/"
-    }
+    },
+    "files": [
+      "src/SDK/autoload.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
@@ -41,8 +44,12 @@
   "bin": [
     "bin/foundation"
   ],
-  "version": "1.8.2-beta",
+  "version": "1.9.0-beta",
   "extra": {
     "object-foundation-next-horizon": "visionary roadmap 1.5\u20133.0"
+  },
+  "suggest": {
+    "object-foundation-bridge-symfony": "Bundle integration for Symfony",
+    "object-foundation-bridge-laravel": "Service Provider integration for Laravel"
   }
 }
