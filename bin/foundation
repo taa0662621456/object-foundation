@@ -54,3 +54,6 @@ $application->add(new FoundationAtomicCheckCommand());
 
 use ObjectFoundation\Command\FoundationApiOpenapiGenerateCommand;
 $application->add(new FoundationApiOpenapiGenerateCommand());
+
+use ObjectFoundation\Command\FoundationApiKeyGenerateCommand;
+$application->add(new FoundationApiKeyGenerateCommand());
