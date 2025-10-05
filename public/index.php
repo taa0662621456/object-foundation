@@ -4,6 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use ObjectFoundation\Ontology\Oql\{Parser, Executor};
 use ObjectFoundation\Ontology\Support\ManifestCollector;
 use ObjectFoundation\Ontology\Exporter\JsonLdExporter;
+use ObjectFoundation\Cache\ManifestCache;
 use ObjectFoundation\Api\Security\Auth;
 use ObjectFoundation\Api\Security\RateLimiter;
 use ObjectFoundation\Api\OpenApiGenerator;
@@ -63,6 +64,19 @@ function read_json() {
     return is_array($data) ? $data : [];
 }
 
+
+function etag_headers(string $payload, int $ts = null): void {
+    $etag = '"' . sha1($payload) . '"';
+    header('ETag: ' . $etag);
+    if ($ts) header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $ts) . ' GMT');
+    $inm = $_SERVER['HTTP_IF_NONE_MATCH'] ?? '';
+    $ims = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
+    if ($inm === $etag || ($ims && $ts && strtotime($ims) >= $ts)) {
+        http_response_code(304);
+        exit;
+    }
+}
+
 function respond_json($data, int $code = 200, string $contentType = 'application/json') {
     http_response_code($code);
     header('Content-Type: ' . $contentType . '; charset=utf-8');
@@ -117,7 +131,8 @@ HTML;
         $parser = new Parser();
         $query = $parser->parse($q);
         $exec = new Executor();
-        $rows = $exec->run($query, $classes);
+        $cache = new ManifestCache();
+        $rows = $cache->result('oql:'.sha1($q.'|'.json_encode($classes)), function() use($exec,$query,$classes){ return $exec->run($query, $classes); });
 
         $format = $_GET['format'] ?? ($body['format'] ?? 'json');
         if ($format === 'jsonld') {
@@ -125,30 +140,40 @@ HTML;
             $manifests = [];
             foreach ($rows as $r) {
                 if (!empty($r['entity']) && class_exists($r['entity'])) {
-                    $manifests[] = $collector->manifestFor($r['entity']);
+                    $manifests[] = (new ManifestCache())->manifestFor($r['entity'], $collector);
                 }
             }
             $jsonld = (new JsonLdExporter())->export($manifests);
+            etag_headers($jsonld, time());
             respond_json($jsonld, 200, 'application/ld+json');
         }
-        respond_json($rows);
+        $payload = json_encode($rows, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+        etag_headers($payload, time());
+        respond_json($payload);
     }
 
     if ($path === '/api/ontology/entities') {
         $classes = isset($_GET['classes']) ? (array)$_GET['classes'] : [];
         $collector = new ManifestCollector();
         $out = [];
+        $cache = new ManifestCache();
         foreach ($classes as $c) {
-            if (class_exists($c)) $out[] = $collector->manifestFor($c);
+            if (class_exists($c)) $out[] = $cache->manifestFor($c, $collector);
         }
-        respond_json($out);
+        $payload = json_encode($out, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+        etag_headers($payload, time());
+        respond_json($payload);
     }
 
     if ($path === '/api/ontology/entity') {
         $name = $_GET['name'] ?? null;
         if (!$name || !class_exists($name)) respond_json(['error'=>'class not found'], 404);
         $collector = new ManifestCollector();
-        respond_json($collector->manifestFor($name));
+        $cache = new ManifestCache();
+        $manifest = $cache->manifestFor($name, $collector);
+        $payload = json_encode($manifest, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+        etag_headers($payload, time());
+        respond_json($payload);
     }
 
     if ($path === '/api/ontology/traits') {
