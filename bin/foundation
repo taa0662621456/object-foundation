@@ -51,3 +51,6 @@ $application->add(new FoundationEntityMappingDumpCommand());
 
 use ObjectFoundation\Command\FoundationAtomicCheckCommand;
 $application->add(new FoundationAtomicCheckCommand());
+
+use ObjectFoundation\Command\FoundationApiOpenapiGenerateCommand;
+$application->add(new FoundationApiOpenapiGenerateCommand());
