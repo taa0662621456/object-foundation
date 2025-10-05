@@ -33,6 +33,13 @@ jobs:
           php bin/foundation foundation:api:openapi:generate -f json -o var/export/openapi.json
           php bin/foundation foundation:api:openapi:generate -f yaml -o var/export/openapi.yaml
 
+      - name: Build distributable zip
+        run: |
+          mkdir -p dist
+          ZIP_NAME="object-foundation-${GITHUB_REF_NAME}.zip"
+          zip -r "dist/${ZIP_NAME}" src/ bin/ composer.json LICENSE README.md CHANGELOG.md ROADMAP.md VISION.md phpunit.xml.dist .github/workflows/release.yml docs/ || echo "No docs folder"
+          echo "✅ Created dist/${ZIP_NAME}"
+
       - name: Update changelog date
         run: |
           TAG=${GITHUB_REF_NAME}
@@ -117,46 +124,3 @@ jobs:
       - name: Trigger Packagist update
         run: |
           curl -XPOST -H 'content-type:application/json'           -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'           https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
-
-      - name: Update Packagist description
-        if: ${{ secrets.PACKAGIST_USERNAME && secrets.PACKAGIST_TOKEN }}
-        run: |
-          TAG=${GITHUB_REF_NAME}
-          SUMMARY="${{ steps.summary.outputs.summary }}"
-          DESCRIPTION=$(echo "$SUMMARY" | sed 's/"/\"/g')
-          curl -X PATCH "https://packagist.org/api/update-package.json"                -H "Content-Type: application/json"                -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}"                -d "{"repository":{"url":"https://github.com/${{ github.repository }}","description":"$DESCRIPTION"}}"
-
-      - name: Ensure package exists on Packagist
-        if: ${{ secrets.PACKAGIST_USERNAME && secrets.PACKAGIST_TOKEN }}
-        run: |
-          REPO_URL="https://github.com/${{ github.repository }}"
-          EXISTS=$(curl -s "https://packagist.org/packages/${{ github.repository | toLower }}" | grep -c '"package":')
-          if [ "$EXISTS" -eq 0 ]; then
-            curl -X POST "https://packagist.org/api/create-package.json"               -H "Content-Type: application/json"               -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}"               -d "{"repository":{"url":"$REPO_URL"}}"
-          fi
-
-      - name: Safe retry Packagist publish
-        if: ${{ secrets.PACKAGIST_USERNAME && secrets.PACKAGIST_TOKEN }}
-        run: |
-          REPO_URL="https://github.com/${{ github.repository }}"
-          MAX_RETRIES=3
-          RETRY_DELAY=15
-          COUNT=1
-
-          while [ $COUNT -le $MAX_RETRIES ]; do
-            HTTP_CODE=$(curl -s -o /tmp/resp.json -w "%{http_code}"               -X POST "https://packagist.org/api/update-package.json"               -H "Content-Type: application/json"               -u "${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}"               -d "{"repository":{"url":"$REPO_URL"}}" || echo "000")
-
-            if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "201" ]]; then
-              cat /tmp/resp.json
-              break
-            elif [[ "$HTTP_CODE" == "403" || "$HTTP_CODE" == "429" || "$HTTP_CODE" =~ ^5 ]]; then
-              sleep $RETRY_DELAY
-              ((COUNT++))
-            else
-              cat /tmp/resp.json
-              exit 1
-            fi
-          done
-          if [ $COUNT -gt $MAX_RETRIES ]; then
-            exit 1
-          fi
