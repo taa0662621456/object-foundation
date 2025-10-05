@@ -1,0 +1,323 @@
+name: CI/CD v3.0.0 — Quality, Release, Docs
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches:
+      - master
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Quality Gate (PHPUnit + Static Analysis + Audit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: xdebug
+          extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: PHPUnit (with coverage)
+        run: |
+          mkdir -p build/coverage-html
+          vendor/bin/phpunit --testdox --colors=always --coverage-clover build/coverage.xml --coverage-html build/coverage-html || (echo "PHPUnit failed"; exit 1)
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.sha }}
+          path: |
+            build/coverage.xml
+            build/coverage-html
+          retention-days: 14
+
+      - name: PHPStan (if available)
+        run: |
+          if [ -f vendor/bin/phpstan ]; then
+            vendor/bin/phpstan analyse src --level=max
+          else
+            echo "phpstan not installed, skipping"
+          fi
+
+      - name: PHP-CS-Fixer (dry-run if available)
+        run: |
+          if [ -f vendor/bin/php-cs-fixer ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --verbose || (echo "Coding style issues found" && exit 1)
+          else
+            echo "php-cs-fixer not installed, skipping"
+          fi
+
+      - name: Composer audit (advisories)
+        run: |
+          composer audit --no-interaction || (echo "Composer audit found issues"; exit 1)
+
+  release:
+    name: Release & Packagist
+    runs-on: ubuntu-latest
+    needs: quality
+    permissions:
+      contents: write
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Generate OpenAPI specs
+        run: |
+          mkdir -p var/export
+          php bin/foundation foundation:api:openapi:generate -f json -o var/export/openapi.json
+          php bin/foundation foundation:api:openapi:generate -f yaml -o var/export/openapi.yaml
+
+      - name: Build distributable zip
+        run: |
+          mkdir -p dist
+          ZIP_NAME="object-foundation-${GITHUB_REF_NAME}.zip"
+          zip -r "dist/${ZIP_NAME}" src/ bin/ composer.json LICENSE README.md CHANGELOG.md ROADMAP.md VISION.md phpunit.xml.dist docs/ .github/workflows/release.yml 2>/dev/null || true
+          echo "Created dist/${ZIP_NAME}"
+
+      - name: Check distributable content
+        run: |
+          ZIP_FILE="dist/object-foundation-${GITHUB_REF_NAME}.zip"
+          echo "Verifying contents of $ZIP_FILE"
+          unzip -l "$ZIP_FILE" | tee dist/zip_contents.txt
+          REQUIRED=("src/" "composer.json" "README.md" "LICENSE")
+          for ITEM in "${REQUIRED[@]}"; do
+            if ! unzip -l "$ZIP_FILE" | grep -q "$ITEM"; then
+              echo "Missing required file or folder: $ITEM"
+              exit 1
+            fi
+          done
+          echo "OK"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: object-foundation-${{ github.ref_name }}
+          path: |
+            dist/object-foundation-${{ github.ref_name }}.zip
+            var/export/openapi.json
+            var/export/openapi.yaml
+          retention-days: 30
+
+      - name: Verify CHANGELOG contains tag
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          if ! grep -q "## $TAG" CHANGELOG.md; then
+            echo "CHANGELOG.md does not contain version $TAG"
+            exit 1
+          fi
+
+      - name: Update changelog date
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          DATE=$(date +'%Y-%m-%d')
+          sed -i "s/## $TAG.*/## $TAG - $DATE/" CHANGELOG.md
+
+      - name: Generate release notes from CHANGELOG
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          awk "/## $TAG/{flag=1;next}/^## /{flag=0}flag" CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "Release notes for $TAG" > RELEASE_NOTES.md
+          fi
+          # format
+          DATE=$(date +'%Y-%m-%d')
+          printf "# 🧠 Object Foundation — %s
+
+_Auto-generated on %s_
+
+" "$TAG" "$DATE" > RN.tmp
+          cat RELEASE_NOTES.md >> RN.tmp
+          mv RN.tmp RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Object Foundation ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            var/export/openapi.json
+            var/export/openapi.yaml
+            dist/object-foundation-${{ github.ref_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Trigger Packagist update
+        if: ${{ secrets.PACKAGIST_USERNAME && secrets.PACKAGIST_TOKEN }}
+        run: |
+          curl -XPOST -H 'content-type:application/json'           -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'           https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
+
+  deploy-docs:
+    name: Deploy OpenAPI Docs to Pages (versioned + latest)
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: object-foundation-${{ github.ref_name }}
+          path: ./public/api/${{ github.ref_name }}
+
+      - name: Prepare Swagger UI index
+        run: |
+          DEST=./public/api/${GITHUB_REF_NAME}
+          mkdir -p "$DEST"
+          cat > "$DEST/index.html" <<'HTML'
+          <!doctype html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Object Foundation API Docs</title>
+            <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+          </head>
+          <body>
+            <div id="swagger-ui"></div>
+            <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+            <script>
+              window.onload = () => {
+                window.ui = SwaggerUIBundle({
+                  url: 'openapi.json',
+                  dom_id: '#swagger-ui',
+                });
+              };
+            </script>
+          </body>
+          </html>
+          HTML
+
+      - name: Publish to gh-pages (versioned)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          destination_dir: api
+
+      - name: Update 'latest' alias
+        run: |
+          git clone --depth 1 --branch gh-pages "https://github.com/${{ github.repository }}" gh-pages
+          cd gh-pages
+          rm -rf api/latest
+          mkdir -p api/latest
+          cp -r api/${{ github.ref_name }}/* api/latest/
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add api/latest
+          git commit -m "chore: update latest alias to ${{ github.ref_name }}" || echo "no changes"
+          git push origin gh-pages
+
+  devdocs:
+    name: Deploy Developer Docs (phpDocumentor) + Coverage
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Generate phpDocumentor (if available)
+        run: |
+          if [ -f vendor/bin/phpdoc ]; then
+            vendor/bin/phpdoc -d src -t public/dev/${GITHUB_REF_NAME}
+          else
+            echo "phpDocumentor not installed, skipping"
+            mkdir -p public/dev/${GITHUB_REF_NAME}
+            echo "<html><body><h1>Developer docs not available</h1></body></html>" > public/dev/${GITHUB_REF_NAME}/index.html
+          fi
+
+      - name: Download coverage html
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-${{ needs.quality.outputs.sha || github.sha }}
+          path: public/coverage/${{ github.ref_name }}
+        continue-on-error: true
+
+      - name: Publish dev docs + coverage
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          destination_dir: .
+
+      - name: Update latest aliases (dev & coverage)
+        run: |
+          git clone --depth 1 --branch gh-pages "https://github.com/${{ github.repository }}" gh-pages
+          cd gh-pages
+          rm -rf dev/latest coverage/latest
+          mkdir -p dev/latest coverage/latest
+          if [ -d dev/${{ github.ref_name }} ]; then cp -r dev/${{ github.ref_name }}/* dev/latest/; fi
+          if [ -d coverage/${{ github.ref_name }} ]; then cp -r coverage/${{ github.ref_name }}/* coverage/latest/; fi
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add dev/latest coverage/latest
+          git commit -m "chore: update latest aliases for dev docs & coverage to ${{ github.ref_name }}" || echo "no changes"
+          git push origin gh-pages
+
+  codeql:
+    name: CodeQL Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: php
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
