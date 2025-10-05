@@ -1,7 +1,6 @@
 <?php
 namespace ObjectFoundation\Traits;
 
-use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 trait ConfigurableTrait
@@ -15,7 +14,7 @@ trait ConfigurableTrait
     protected array $decryptedConfig = [];
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    protected ?DateTimeImmutable $lastConfigUpdate = null;
+    protected ?\DateTimeImmutable $lastConfigUpdate = null;
 
     public function getConfig(bool $decrypted = true): ?array
     {
@@ -26,10 +25,10 @@ trait ConfigurableTrait
     {
         $this->config = $config;
         $this->decryptedConfig = $config;
-        $this->lastConfigUpdate = new DateTimeImmutable();
+        $this->lastConfigUpdate = new \DateTimeImmutable();
     }
 
     public function isConfigEncrypted(): bool { return $this->configEncrypted; }
     public function setConfigEncrypted(bool $flag): void { $this->configEncrypted = $flag; }
-    public function getLastConfigUpdate(): ?DateTimeImmutable { return $this->lastConfigUpdate; }
+    public function getLastConfigUpdate(): ?\DateTimeImmutable { return $this->lastConfigUpdate; }
 }

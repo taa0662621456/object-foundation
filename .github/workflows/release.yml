@@ -1,0 +1,44 @@
+name: Release & Packagist Auto-Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --no-suggest
+
+      - name: Run tests
+        run: vendor/bin/phpunit --testdox --colors=always
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Packagist
+        if: success()
+        env:
+          PACKAGIST_USER: ${{ secrets.PACKAGIST_USER }}
+          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+        run: |
+          curl -X POST             -H "Content-Type: application/json"             -d '{"repository":{"url":"https://github.com/${{ github.repository }}.git"}}'             -u "${PACKAGIST_USER}:${PACKAGIST_TOKEN}"             https://packagist.org/api/update-package

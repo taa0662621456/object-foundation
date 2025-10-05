@@ -1,7 +1,5 @@
 <?php
 namespace ObjectFoundation\Interfaces;
-use DateTimeImmutable;
-
 interface LockableInterface {
-    public function getLockedAt(): ?DateTimeImmutable;
+    public function getLockedAt(): ?\DateTimeImmutable;
 }
