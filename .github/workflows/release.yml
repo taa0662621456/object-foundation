@@ -1,14 +1,17 @@
-name: Release v2.0.0-beta
+name: Release
 
 on:
   push:
     tags:
-      - 'v2.0.0-beta'
+      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # allow creating releases and uploading assets
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,7 +20,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, json, intl, pdo, pdo_mysql, xml, dom, curl, zip
+          extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress
@@ -26,19 +29,18 @@ jobs:
         run: vendor/bin/phpunit --testdox --colors=always
 
       - name: Create GitHub release
+        id: release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v2.0.0-beta
-          name: Object Foundation v2.0.0-beta
+          tag_name: ${{ github.ref_name }}
+          name: Object Foundation ${{ github.ref_name }}
           body: |
-            ## Object Foundation v2.0.0-beta
-            - Stable Reaction System
-            - Traits Catalog
-            - Mapping Generator
-            - Ready for Packagist publication
+            Automated release from workflow.
+            - SDK Bridges (Symfony/Laravel)
+            - REST API (OQL + Introspection)
+            - Atomic Integrity Checker
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
-      - name: Trigger Packagist update
-        run: |
-          curl -XPOST -H 'content-type:application/json'           -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'           https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
+      - name: Confirm release result
+        run: echo "Release completed for tag: ${{ github.ref_name }}"
