@@ -1,6 +1,8 @@
 <?php
 namespace ObjectFoundation\Api\Observability;
 
+use DateTimeImmutable;
+
 final class RequestLogger
 {
     private string $file;
@@ -15,7 +17,7 @@ final class RequestLogger
 
     public function log(array $data): void
     {
-        $data['ts'] = (new \DateTimeImmutable())->format('c');
+        $data['ts'] = (new DateTimeImmutable())->format('c');
         $json = json_encode($data, JSON_UNESCAPED_SLASHES);
         file_put_contents($this->file, $json . PHP_EOL, FILE_APPEND);
     }

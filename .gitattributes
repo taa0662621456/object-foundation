@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.php diff=php
+*.md diff=markdown
+*.yml diff=yaml
+*.xml diff=xml
+*.json diff=json
+*.png binary
+*.zip binary
+*.lock -diff

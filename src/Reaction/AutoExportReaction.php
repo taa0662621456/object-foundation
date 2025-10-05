@@ -7,7 +7,7 @@ use ObjectFoundation\Ontology\Exporter\JsonLdExporter;
 
 final class AutoExportReaction
 {
-    public function __construct(private string $out = 'var/export/auto-entities.jsonld') {}
+    public function __construct(private readonly string $out = 'var/export/auto-entities.jsonld') {}
 
     public function __invoke(object $event): void
     {

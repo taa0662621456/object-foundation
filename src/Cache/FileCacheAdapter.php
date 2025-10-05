@@ -3,7 +3,7 @@ namespace ObjectFoundation\Cache;
 
 final class FileCacheAdapter implements CacheAdapter
 {
-    public function __construct(private string $dir = 'var/cache/manifests') {
+    public function __construct(private readonly string $dir = 'var/cache/manifests') {
         @mkdir($this->dir, 0777, true);
     }
 

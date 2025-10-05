@@ -1,6 +1,7 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ReflectionClass;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -28,7 +29,7 @@ final class FoundationOntologyInspectCommand extends Command
                 continue;
             }
             $m = $collector->manifestFor($class);
-            $ref = new \ReflectionClass($class);
+            $ref = new ReflectionClass($class);
             $props = array_map(fn($p) => '$'.$p->getName(), $ref->getProperties());
 
             $output->writeln("\n<info>{$m['entity']}</info>");

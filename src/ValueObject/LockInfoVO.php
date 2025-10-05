@@ -1,20 +1,21 @@
 <?php
 namespace ObjectFoundation\ValueObject;
 
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Embeddable]
 class LockInfoVO
 {
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private ?\DateTimeImmutable $lockedAt = null;
+    private ?DateTimeImmutable $lockedAt = null;
 
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $lockedBy = null;
 
     public function lock(?int $userId = null): void
     {
-        $this->lockedAt = new \DateTimeImmutable();
+        $this->lockedAt = new DateTimeImmutable();
         $this->lockedBy = $userId;
     }
 
@@ -24,6 +25,6 @@ class LockInfoVO
         $this->lockedBy = null;
     }
 
-    public function getLockedAt(): ?\DateTimeImmutable { return $this->lockedAt; }
+    public function getLockedAt(): ?DateTimeImmutable { return $this->lockedAt; }
     public function getLockedBy(): ?int { return $this->lockedBy; }
 }

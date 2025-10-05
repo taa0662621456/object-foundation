@@ -14,21 +14,22 @@ final class RdfExporter
 
         foreach ($manifests as $m) {
             $name = $m['entity'] ?? 'Unknown';
-            $id = 'of:' . str_replace('\\\', '/', $name);
+            $id = 'of:' . str_replace('\\', '/', $name);
+
             $lines[] = sprintf('%s rdf:type of:OntologyEntity ;', $id);
-            if (!empty($m['traits'])) {
-                foreach ($m['traits'] as $t) {
-                    $lines[] = sprintf('    rdfs:seeAlso "%s" ;', $t);
-                }
+
+            foreach ($m['traits'] ?? [] as $t) {
+                $lines[] = sprintf('    rdfs:seeAlso "%s" ;', $t);
             }
-            if (!empty($m['interfaces'])) {
-                foreach ($m['interfaces'] as $i) {
-                    $lines[] = sprintf('    rdfs:subClassOf "%s" ;', $i);
-                }
+
+            foreach ($m['interfaces'] ?? [] as $i) {
+                $lines[] = sprintf('    rdfs:subClassOf "%s" ;', $i);
             }
+
             $lines[] = '    .';
             $lines[] = '';
         }
+
         return implode("\n", $lines);
     }
 }

@@ -2,6 +2,7 @@
 namespace ObjectFoundation\Traits;
 
 use ObjectFoundation\Interfaces\EncryptableInterface;
+use RuntimeException;
 
 trait EncryptableTrait
 {
@@ -21,7 +22,7 @@ trait EncryptableTrait
         $ct = substr($raw, $ivlen);
         $pt = openssl_decrypt($ct, $cipher, $key, OPENSSL_RAW_DATA, $iv);
         if ($pt === false) {
-            throw new \RuntimeException('Decryption failed');
+            throw new RuntimeException('Decryption failed');
         }
         return $pt;
     }

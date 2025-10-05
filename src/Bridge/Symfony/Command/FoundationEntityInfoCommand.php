@@ -1,6 +1,7 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ReflectionClass;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -25,7 +26,7 @@ final class FoundationEntityInfoCommand extends Command
                 $output->writeln("<error>Class not found:</error> $class");
                 continue;
             }
-            $ref = new \ReflectionClass($class);
+            $ref = new ReflectionClass($class);
             $traits = array_keys($ref->getTraits());
             $interfaces = array_values($ref->getInterfaceNames());
             $props = array_map(fn($p) => '$'.$p->getName(), $ref->getProperties());

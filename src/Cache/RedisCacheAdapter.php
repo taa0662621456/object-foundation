@@ -1,15 +1,17 @@
 <?php
 namespace ObjectFoundation\Cache;
 
+use Redis;
+
 final class RedisCacheAdapter implements CacheAdapter
 {
-    private \Redis $redis;
+    private Redis $redis;
     private string $prefix;
 
     public function __construct(string $url, string $prefix = 'of:cache:')
     {
         $this->prefix = $prefix;
-        $this->redis = new \Redis();
+        $this->redis = new Redis();
         $parts = parse_url($url);
         $host = $parts['host'] ?? '127.0.0.1';
         $port = (int)($parts['port'] ?? 6379);

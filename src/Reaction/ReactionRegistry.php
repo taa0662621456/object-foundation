@@ -3,10 +3,10 @@ namespace ObjectFoundation\Reaction;
 
 final class ReactionRegistry
 {
-    /** @var array<string, bool> */
+    /** @var array */
     private array $enabled = [];
 
-    /** @var array<string, callable> */
+    /** @var array */
     private array $handlers = [];
 
     public function register(string $name, callable $handler, bool $enabled = true): void

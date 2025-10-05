@@ -1,6 +1,8 @@
 <?php
 namespace ObjectFoundation\Ontology\Oql;
 
+use ReflectionClass;
+
 final class Executor
 {
     /**
@@ -13,7 +15,7 @@ final class Executor
         $rows = [];
         foreach ($classes as $class) {
             if (!class_exists($class)) continue;
-            $ref = new \ReflectionClass($class);
+            $ref = new ReflectionClass($class);
             $traits = array_keys($ref->getTraits());
             $interfaces = array_values($ref->getInterfaceNames());
 
@@ -39,7 +41,7 @@ final class Executor
         return $rows;
     }
 
-    private function evalAst(array $node, \ReflectionClass $ref, array $traits, array $interfaces): bool
+    private function evalAst(array $node, ReflectionClass $ref, array $traits, array $interfaces): bool
     {
         $type = $node['type'] ?? null;
         if ($type === 'pred') {

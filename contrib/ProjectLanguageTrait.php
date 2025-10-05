@@ -45,7 +45,7 @@ trait ProjectLanguageTrait
     #[Assert\Length(min: 100, minMessage: 'projects.en.gb.too.short')]
     private string $projectProductDesc = 'project_product_desc';
 
-    #[ORM\OneToOne(inversedBy: 'projectEnGb', targetEntity: Project::class)]
+    #[ORM\OneToOne(targetEntity: Project::class, inversedBy: 'projectEnGb')]
     #[Ignore]
     private Project $projectEnGb;
 

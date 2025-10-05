@@ -8,7 +8,7 @@ return [
     ObjectFoundation\Bridge\Symfony\ObjectFoundationBundle::class => ['all' => true],
 ];
 ```
-2) All `foundation:*` commands are available via `bin/console` if you wire them or use native `bin/foundation`.
+1) All `foundation:*` commands are available via `bin/console` if you wire them or use native `bin/foundation`.
 
 ## Laravel
 1) Register service provider:
@@ -18,7 +18,7 @@ return [
     ObjectFoundation\Bridge\Laravel\ObjectFoundationServiceProvider::class,
 ]
 ```
-2) Run commands:
+1) Run commands:
 ```bash
 php artisan foundation:ontology:query 'SELECT entity WHERE name like "Demo"' "Examples\SymfonyDemo\Entity\DemoEntity"
 ```

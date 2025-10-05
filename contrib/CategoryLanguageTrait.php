@@ -25,7 +25,7 @@ trait CategoryLanguageTrait
     #[Assert\Length(min: 10, minMessage: 'categories.en.gb.too.short')]
     private string $categoryDesc = 'category_desc';
 
-    #[ORM\OneToOne(inversedBy: 'categoryEnGb', targetEntity: Category::class)]
+    #[ORM\OneToOne(targetEntity: Category::class, inversedBy: 'categoryEnGb')]
     #[Ignore]
     private CategoryEnGb $categoryEnGbCategory;
 

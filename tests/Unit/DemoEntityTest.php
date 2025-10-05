@@ -3,6 +3,7 @@ namespace ObjectFoundation\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Examples\SymfonyDemo\Entity\DemoEntity;
+use ReflectionClass;
 use Symfony\Component\Uid\Uuid;
 
 final class DemoEntityTest extends TestCase
@@ -11,7 +12,7 @@ final class DemoEntityTest extends TestCase
     {
         $e = new DemoEntity();
         // simulate PrePersist lifecycle
-        $ref = new \ReflectionClass($e);
+        $ref = new ReflectionClass($e);
         foreach (['_identityInit','_auditOnCreate'] as $m) {
             if ($ref->hasMethod($m)) {
                 $ref->getMethod($m)->setAccessible(true);

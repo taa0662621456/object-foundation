@@ -1,6 +1,8 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -76,7 +78,7 @@ final class FoundationAtomicCheckCommand extends Command
     private function collectPhp(string $base, array $exclude): array
     {
         $out = [];
-        $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($base));
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($base));
         foreach ($rii as $file) {
             if ($file->isDir()) continue;
             $path = str_replace('\\', '/', $file->getPathname());

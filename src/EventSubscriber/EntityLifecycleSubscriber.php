@@ -6,10 +6,11 @@ use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use ObjectFoundation\Events\{EntityCreatedEvent, EntityUpdatedEvent, ConfigChangedEvent, SoftDeletedEvent};
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Throwable;
 
 final class EntityLifecycleSubscriber implements EventSubscriber
 {
-    public function __construct(private EventDispatcherInterface $dispatcher) {}
+    public function __construct(private readonly EventDispatcherInterface $dispatcher) {}
 
     public function getSubscribedEvents(): array
     {
@@ -39,7 +40,7 @@ final class EntityLifecycleSubscriber implements EventSubscriber
                 if (is_array($config)) {
                     $this->dispatcher->dispatch(new ConfigChangedEvent($entity, $config));
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // no-op: entity may not support this fully
             }
         }

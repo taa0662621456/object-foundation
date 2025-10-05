@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 class WorkflowStateVO
 {
     #[ORM\Column(type: 'string', length: 64)]
-    private string $state = 'submitted';
+    private string $state;
 
     public function __construct(string $state = 'submitted')
     {

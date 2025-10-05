@@ -2,8 +2,6 @@
 
 namespace App\EntityTrait;
 
-use App\Entity\TotpConfiguration;
-use App\Entity\TotpConfigurationInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 trait TotpAuthenticationTrait

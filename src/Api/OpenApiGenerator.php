@@ -119,6 +119,6 @@ final class OpenApiGenerator
                 return $out;
             }
         }
-        return $pad . (string)$data . "\n";
+        return $pad . $data . "\n";
     }
 }

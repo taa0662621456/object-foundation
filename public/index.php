@@ -1,11 +1,11 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
+use JetBrains\PhpStorm\NoReturn;
 use ObjectFoundation\Ontology\Oql\{Parser, Executor};
 use ObjectFoundation\Ontology\Support\ManifestCollector;
 use ObjectFoundation\Ontology\Exporter\JsonLdExporter;
 use ObjectFoundation\Cache\ManifestCache;
-use ObjectFoundation\Api\Observability\RequestLogger;
 use ObjectFoundation\Api\Observability\MetricsCollector;
 use ObjectFoundation\Events\OutboxStorage;
 use ObjectFoundation\Api\Security\Auth;
@@ -15,9 +15,6 @@ use ObjectFoundation\Api\OpenApiGenerator;
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $__of_t0 = microtime(true);
 $method = $_SERVER['REQUEST_METHOD'];
-
-use ObjectFoundation\Api\Security\Auth;
-use ObjectFoundation\Api\Security\RateLimiter;
 
 // --- CORS ---
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
@@ -36,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // --- Auth ---
 $publicPaths = ['/api/openapi.json', '/api/docs'];
 $requireAuth = getenv('OBJECT_FOUNDATION_REQUIRE_AUTH');
-$requireAuth = ($requireAuth === false) ? true : (strtolower($requireAuth) !== 'false' && $requireAuth !== '0');
+$requireAuth = $requireAuth === false || strtolower($requireAuth) !== 'false' && $requireAuth !== '0';
 
 if ($requireAuth && !in_array($path, $publicPaths, true)) {
     if (!Auth::isAuthorized($_SERVER)) {
@@ -81,7 +78,7 @@ function etag_headers(string $payload, int $ts = null): void {
     }
 }
 
-function respond_json($data, int $code = 200, string $contentType = 'application/json') {
+#[NoReturn] function respond_json($data, int $code = 200, string $contentType = 'application/json') {
     http_response_code($code);
     header('Content-Type: ' . $contentType . '; charset=utf-8');
     echo is_string($data) ? $data : json_encode($data, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
@@ -93,7 +90,7 @@ try {
         $mc = new MetricsCollector();
         $snap = $mc->snapshot();
         $export = getenv('OBJECT_FOUNDATION_METRICS_EXPORT');
-        $export = ($export === false) ? true : (strtolower($export) !== 'false' && $export !== '0');
+        $export = $export === false || strtolower($export) !== 'false' && $export !== '0';
         if ($export && ($_GET['format'] ?? '') === 'prometheus') {
             header('Content-Type: text/plain; charset=utf-8');
             echo $mc->toPrometheus($snap);
@@ -105,7 +102,7 @@ try {
     if ($path === '/api/openapi.json') {
         $gen = new OpenApiGenerator();
         $json = $gen->toJson($gen->build());
-        respond_json($json, 200, 'application/json');
+        respond_json($json);
     }
 
     if ($path === '/api/docs') {
@@ -248,5 +245,5 @@ register_shutdown_function(function() use($__of_t0, $path) {
         'auth' => $authType,
         'cache_hit' => $cacheHitFlag
     ]);
-    (new \ObjectFoundation\Api\Observability\MetricsCollector())->addRequest($duration, $status, $cacheHitFlag, $status===401);
+    (new MetricsCollector())->addRequest($duration, $status, $cacheHitFlag, $status===401);
 });

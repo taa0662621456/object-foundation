@@ -1,21 +1,44 @@
-/vendor/
-/composer.lock
-/.idea/
-/.vscode/
-node_modules/
-build/
-coverage/
-reports/
+# OS & IDE
 .DS_Store
 Thumbs.db
-*.log
-*.tmp
-*.zip
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# PHP Composer
+/vendor/
+composer.lock
+
+# Symfony cache & logs
+/var/cache/
+/var/log/
+/var/sessions/
+/var/test/
+/var/tmp/
+/node_modules/
+
+# PHPUnit
+/phpunit.result.cache
+/.phpunit.cache
+coverage/
+
+# Build & Artifacts
+/build/
 /dist/
-/contrib/*.zip
-/examples/*/vendor/
-examples/*/.env*
-/.env*
-/cache/
-/var/
-/logs/
+/docs/export/
+/*.zip
+*.tar.gz
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+
+# Local environment
+.env.local
+.env.test.local
+.env.*.local
+
+# User data
+/storage/

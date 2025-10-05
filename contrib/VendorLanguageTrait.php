@@ -71,7 +71,7 @@ trait VendorLanguageTrait
     #[ORM\Column(name: 'vendor_params', type: 'string', nullable: true, options: ['default' => 'vendor_params'])]
     private ?string $vendorParams = null;
 
-    #[ORM\OneToOne(inversedBy: 'vendorEnGb', targetEntity: Vendor::class)]
+    #[ORM\OneToOne(targetEntity: Vendor::class, inversedBy: 'vendorEnGb')]
     #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     #[Ignore]
     private Vendor $vendorEnGbVendor;

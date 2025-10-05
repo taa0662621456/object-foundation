@@ -1,11 +1,14 @@
 <?php
 namespace ObjectFoundation\Events;
 
+use DateTimeImmutable;
+use Redis;
+
 final class OutboxStorage
 {
     private string $driver; // file|redis
     private string $file;
-    private ?\Redis $redis = null;
+    private ?Redis $redis = null;
     private string $prefix = 'of:outbox:';
 
     public function __construct(?string $driver = null, ?string $file = null)
@@ -14,7 +17,7 @@ final class OutboxStorage
         $this->file = $file ?? (getenv('OBJECT_FOUNDATION_OUTBOX_FILE') ?: 'var/outbox/events.json');
         if ($this->driver === 'redis') {
             $url = getenv('REDIS_URL') ?: 'redis://127.0.0.1:6379/0';
-            $this->redis = new \Redis();
+            $this->redis = new Redis();
             $parts = parse_url($url);
             $host = $parts['host'] ?? '127.0.0.1';
             $port = (int)($parts['port'] ?? 6379);
@@ -35,7 +38,7 @@ final class OutboxStorage
             'id' => $this->uuid(),
             'event' => $event,
             'payload' => $payload,
-            'created_at' => (new \DateTimeImmutable())->format('c'),
+            'created_at' => (new DateTimeImmutable())->format('c'),
             'dispatched' => false,
             'attempts' => 0,
             'last_error' => null

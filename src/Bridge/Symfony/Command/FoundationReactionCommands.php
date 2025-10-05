@@ -27,8 +27,8 @@ final class FoundationReactionListCommand extends Command
     public static function bootstrap(): ReactionRegistry
     {
         $registry = new ReactionRegistry();
-        $registry->register('AutoLogReaction', new AutoLogReaction(), true);
-        $registry->register('AutoExportReaction', new AutoExportReaction(), true);
+        $registry->register('AutoLogReaction', new AutoLogReaction());
+        $registry->register('AutoExportReaction', new AutoExportReaction());
         return $registry;
     }
 }

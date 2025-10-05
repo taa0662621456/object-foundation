@@ -1,6 +1,7 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ReflectionClass;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -26,7 +27,7 @@ final class FoundationEntityMappingDumpCommand extends Command
             return Command::FAILURE;
         }
 
-        $ref = new \ReflectionClass($class);
+        $ref = new ReflectionClass($class);
         $map = [$ref->getName() => []];
         foreach ($ref->getProperties() as $p) {
             $type = 'string';

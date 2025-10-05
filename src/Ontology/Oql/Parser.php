@@ -1,6 +1,8 @@
 <?php
 namespace ObjectFoundation\Ontology\Oql;
 
+use InvalidArgumentException;
+
 final class Parser
 {
     private array $tokens = [];
@@ -10,7 +12,7 @@ final class Parser
     {
         $q = trim($q);
         if (stripos($q, 'SELECT ') !== 0) {
-            throw new \InvalidArgumentException('Query must start with SELECT');
+            throw new InvalidArgumentException('Query must start with SELECT');
         }
         $rest = substr($q, 7);
         $parts = preg_split('/\s+WHERE\s+/i', $rest, 2);
@@ -38,7 +40,7 @@ final class Parser
             if ($ch === '"') {
                 $j = $i+1; $buf = '';
                 while ($j < $len && $s[$j] !== '"') { $buf .= $s[$j]; $j++; }
-                if ($j >= $len) throw new \InvalidArgumentException('Unclosed string');
+                if ($j >= $len) throw new InvalidArgumentException('Unclosed string');
                 $out[] = ['STRING', $buf];
                 $i = $j+1; continue;
             }
@@ -60,13 +62,14 @@ final class Parser
         return $out;
     }
 
-    private function peek($offset = 0) { return $this->tokens[$this->pos + $offset] ?? null; }
+    private function peek() {
+        return $this->tokens[$this->pos + 0] ?? null; }
     private function eat($expected = null) {
         $tok = $this->tokens[$this->pos] ?? null;
         if ($expected !== null) {
             if ($tok !== $expected && !($expected === 'IDENT' && is_array($tok) && $tok[0]==='IDENT')
                 && !($expected === 'STRING' && is_array($tok) && $tok[0]==='STRING')) {
-                throw new \InvalidArgumentException('Unexpected token');
+                throw new InvalidArgumentException('Unexpected token');
             }
         }
         $this->pos++;
@@ -137,6 +140,6 @@ final class Parser
             $substr = is_array($strTok) ? $strTok[1] : '';
             return ['type'=>'pred','op'=>'name_like','what'=>$substr];
         }
-        throw new \InvalidArgumentException('Unknown predicate near token: '.print_r($t,true));
+        throw new InvalidArgumentException('Unknown predicate near token: '.print_r($t,true));
     }
 }

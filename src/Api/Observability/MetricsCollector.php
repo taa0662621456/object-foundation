@@ -1,10 +1,12 @@
 <?php
 namespace ObjectFoundation\Api\Observability;
 
+use Redis;
+
 final class MetricsCollector
 {
     private string $storage;
-    private ?\Redis $redis = null;
+    private ?Redis $redis = null;
     private string $prefix = 'of:metrics:';
 
     public function __construct(?string $storage = null)
@@ -14,7 +16,7 @@ final class MetricsCollector
 
         $redisUrl = getenv('REDIS_URL') ?: null;
         if ($redisUrl && class_exists('\Redis')) {
-            $this->redis = new \Redis();
+            $this->redis = new Redis();
             $parts = parse_url($redisUrl);
             $host = $parts['host'] ?? '127.0.0.1';
             $port = (int)($parts['port'] ?? 6379);

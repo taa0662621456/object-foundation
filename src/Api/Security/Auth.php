@@ -18,7 +18,7 @@ final class Auth
 
         // If auth not required, allow public
         $require = getenv('OBJECT_FOUNDATION_REQUIRE_AUTH');
-        $requireAuth = ($require === false) ? false : (strtolower($require) !== 'false' && $require !== '0');
+        $requireAuth = !($require === false) && strtolower($require) !== 'false' && $require !== '0';
 
         if (!$requireAuth && $auth === '') return true;
 

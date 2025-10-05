@@ -1,6 +1,7 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ReflectionClass;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -21,7 +22,7 @@ final class FoundationTraitsDescribeCommand extends Command
             return Command::FAILURE;
         }
 
-        $ref = new \ReflectionClass($name);
+        $ref = new ReflectionClass($name);
         $methods = array_map(fn($m) => $m->getName(), $ref->getMethods());
         $props = array_map(fn($p) => '$'.$p->getName(), $ref->getProperties());
         $deps = array_keys($ref->getTraits());
