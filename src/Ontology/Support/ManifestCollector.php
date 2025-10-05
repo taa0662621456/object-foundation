@@ -1,0 +1,20 @@
+<?php
+namespace ObjectFoundation\Ontology\Support;
+
+final class ManifestCollector
+{
+    /**
+     * Build a manifest entry for the given FQCN via reflection.
+     */
+    public function manifestFor(string $class): array
+    {
+        $ref = new \ReflectionClass($class);
+        $traits = array_keys($ref->getTraits());
+        $interfaces = array_values($ref->getInterfaceNames());
+        return [
+            'entity' => $ref->getName(),
+            'traits' => $traits,
+            'interfaces' => $interfaces,
+        ];
+    }
+}

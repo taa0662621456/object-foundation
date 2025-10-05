@@ -14,3 +14,11 @@ use ObjectFoundation\Command\FoundationConfigRotateKeyCommand;
 
 $application->add(new FoundationConfigEncryptCommand());
 $application->add(new FoundationConfigRotateKeyCommand());
+
+use ObjectFoundation\Command\FoundationOntologyExportCommand;
+use ObjectFoundation\Command\FoundationOntologyInspectCommand;
+use ObjectFoundation\Command\FoundationLocaleScanCommand;
+
+$application->add(new FoundationOntologyExportCommand());
+$application->add(new FoundationOntologyInspectCommand());
+$application->add(new FoundationLocaleScanCommand());
