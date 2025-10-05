@@ -1,4 +1,4 @@
-name: Release v2.x
+name: Release v2.x with Docs Deploy
 
 on:
   push:
@@ -72,33 +72,6 @@ jobs:
           DATE=$(date +'%Y-%m-%d')
           sed -i "s/## $TAG.*/## $TAG - $DATE/" CHANGELOG.md
 
-      - name: Post-release: create next unreleased section
-        run: |
-          TAG=${GITHUB_REF_NAME}
-          NEW_HEADER="## vNEXT - unreleased
-### 🆕 Added
-- (placeholder)
-
-### ♻️ Changed
-- (placeholder)
-
-### 🪲 Fixed
-- (placeholder)
-
-### ⚡ Improved
-- (placeholder)
-
----
-"
-          TEMP_FILE=$(mktemp)
-          { echo -e "$NEW_HEADER"; cat CHANGELOG.md; } > "$TEMP_FILE"
-          mv "$TEMP_FILE" CHANGELOG.md
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add CHANGELOG.md
-          git commit -m "chore: add unreleased section after $TAG"
-          git push || echo "No push (detached head)"
-
       - name: Generate RELEASE_NOTES.md from CHANGELOG
         run: |
           TAG=${GITHUB_REF_NAME}
@@ -107,38 +80,11 @@ jobs:
             echo "Release notes for $TAG" > RELEASE_NOTES.md
           fi
 
-      - name: Format RELEASE_NOTES.md for GitHub
-        run: |
-          TAG=${GITHUB_REF_NAME}
-          TITLE="# 🧠 Object Foundation — $TAG"
-          DATE=$(date +'%Y-%m-%d')
-          TEMP_FILE=$(mktemp)
-          {
-            echo "$TITLE"
-            echo ""
-            echo "_Auto-generated on $DATE_"
-            echo ""
-            echo "🚀 **This release was built and published automatically via CI/CD.**"
-            echo ""
-            cat RELEASE_NOTES.md
-          } > "$TEMP_FILE"
-          mv "$TEMP_FILE" RELEASE_NOTES.md
-
-      - name: Generate short release summary
-        id: summary
-        run: |
-          TAG=${GITHUB_REF_NAME}
-          SUMMARY=$(awk '/### 🆕 Added/{flag=1;next}/^### /{flag=0}flag' CHANGELOG.md | head -n 1 | sed 's/^- *//')
-          if [ -z "$SUMMARY" ]; then
-            SUMMARY="Automated release for $TAG"
-          fi
-          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          name: Object Foundation ${{ github.ref_name }} — ${{ steps.summary.outputs.summary }}
+          name: Object Foundation ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           files: |
             var/export/openapi.json
@@ -150,3 +96,55 @@ jobs:
       - name: Trigger Packagist update
         run: |
           curl -XPOST -H 'content-type:application/json'           -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'           https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
+
+  deploy-docs:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: object-foundation-${{ github.ref_name }}
+          path: ./public/api
+
+      - name: Prepare Swagger UI
+        run: |
+          mkdir -p ./public/api
+          cat > ./public/api/index.html <<'HTML'
+          <!doctype html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Object Foundation API Docs</title>
+            <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+          </head>
+          <body>
+            <div id="swagger-ui"></div>
+            <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+            <script>
+              window.onload = () => {
+                window.ui = SwaggerUIBundle({
+                  url: 'openapi.json',
+                  dom_id: '#swagger-ui',
+                });
+              };
+            </script>
+          </body>
+          </html>
+          HTML
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          destination_dir: api/${{ github.ref_name }}
