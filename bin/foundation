@@ -30,3 +30,7 @@ use ObjectFoundation\Command\FoundationOntologyOpenapiCommand;
 $application->add(new FoundationEntityInitCommand());
 $application->add(new FoundationOntologyGraphqlCommand());
 $application->add(new FoundationOntologyOpenapiCommand());
+
+use ObjectFoundation\Command\FoundationOntologyQueryCommand;
+
+$application->add(new FoundationOntologyQueryCommand());
