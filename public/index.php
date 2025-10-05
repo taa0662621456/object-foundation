@@ -7,6 +7,7 @@ use ObjectFoundation\Ontology\Exporter\JsonLdExporter;
 use ObjectFoundation\Cache\ManifestCache;
 use ObjectFoundation\Api\Observability\RequestLogger;
 use ObjectFoundation\Api\Observability\MetricsCollector;
+use ObjectFoundation\Events\OutboxStorage;
 use ObjectFoundation\Api\Security\Auth;
 use ObjectFoundation\Api\Security\RateLimiter;
 use ObjectFoundation\Api\OpenApiGenerator;
@@ -165,6 +166,14 @@ HTML;
         }
         $payload = json_encode($rows, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
         etag_headers($payload, time());
+        // OUTBOX EVENT
+        if ($method === 'POST') {
+            (new OutboxStorage())->append('OQLQueryExecuted', [
+                'query' => $q,
+                'classes' => $classes,
+                'rows' => count($rows)
+            ]);
+        }
         respond_json($payload);
     }
 
@@ -178,6 +187,14 @@ HTML;
         }
         $payload = json_encode($out, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
         etag_headers($payload, time());
+        // OUTBOX EVENT
+        if ($method === 'POST') {
+            (new OutboxStorage())->append('OQLQueryExecuted', [
+                'query' => $q,
+                'classes' => $classes,
+                'rows' => count($rows)
+            ]);
+        }
         respond_json($payload);
     }
 
@@ -189,6 +206,14 @@ HTML;
         $manifest = $cache->manifestFor($name, $collector);
         $payload = json_encode($manifest, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
         etag_headers($payload, time());
+        // OUTBOX EVENT
+        if ($method === 'POST') {
+            (new OutboxStorage())->append('OQLQueryExecuted', [
+                'query' => $q,
+                'classes' => $classes,
+                'rows' => count($rows)
+            ]);
+        }
         respond_json($payload);
     }
 

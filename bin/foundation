@@ -63,3 +63,9 @@ $application->add(new FoundationCacheFlushCommand());
 
 use ObjectFoundation\Command\FoundationMetricsReportCommand;
 $application->add(new FoundationMetricsReportCommand());
+
+use ObjectFoundation\Command\FoundationOutboxDispatchCommand;
+$application->add(new FoundationOutboxDispatchCommand());
+
+use ObjectFoundation\Command\FoundationOutboxPurgeCommand;
+$application->add(new FoundationOutboxPurgeCommand());

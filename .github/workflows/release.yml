@@ -1,19 +1,14 @@
-name: Release
+name: Release v2.5.0-beta
 
 on:
   push:
-    branches:
-      - master
     tags:
-      - 'v*.*.*'
+      - 'v2.5.0-beta'
   workflow_dispatch:
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,7 +17,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
+          extensions: mbstring, json, intl, pdo, pdo_mysql, xml, dom, curl, zip
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress
@@ -34,32 +29,25 @@ jobs:
         run: |
           php bin/foundation foundation:api:openapi:generate -f json -o var/export/openapi.json
           php bin/foundation foundation:api:openapi:generate -f yaml -o var/export/openapi.yaml
+          vendor/bin/phpunit --testdox --colors=always
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Object Foundation ${{ github.ref_name }}
+          tag_name: v2.0.0-beta
+          name: Object Foundation v2.0.0-beta
           body: |
-            Automated release from workflow.
-            ## Object Foundation Release
+            OpenAPI spec attached as release assets.
+            ## Object Foundation v2.0.0-beta
             - Stable Reaction System
             - Traits Catalog
             - Mapping Generator
             - Ready for Packagist publication
-            - Observability Layer
-            - Auth / CORS / Caching
-            - OpenAPI / Swagger / Redis / Metrics
-            OpenAPI spec attached as release assets.
           files: |
             var/export/openapi.json
             var/export/openapi.yaml
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger Packagist update
-        run: |
-          curl -XPOST -H 'content-type:application/json'             -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}'             https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
-
-      - name: Confirm release result
-        run: echo "Release completed for tag: ${{ github.ref_name }}"
+        run: curl -XPOST -H 'content-type:application/json' -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}' "https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}"
