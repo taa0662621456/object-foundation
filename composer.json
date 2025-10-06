@@ -46,7 +46,7 @@
   "prefer-stable": true,
   "scripts": {
     "test:atomicity": [
-      "@php scripts/atomicity-check.php"
+      "@php sh/atomicity-check.php"
     ]
   },
     "test": "phpunit --testdox",
