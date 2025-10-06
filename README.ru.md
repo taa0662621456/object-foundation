@@ -5,7 +5,7 @@
 
 ### Добавлено в v2.5.3
 - Кроссплатформенная проверка атомарности (`composer test:atomicity`)
-- PHP-скрипт проверки (`scripts/atomicity-check.php`)
+- PHP-скрипт проверки (`sh/atomicity-check.php`)
 - Поддержка Windows/macOS/Linux
 - Интеграция `ramsey/uuid` через `UuidGeneratorInterface`
 

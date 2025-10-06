@@ -13,4 +13,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run atomicity check
-        run: bash scripts/atomicity-check.sh
+        run: bash sh/atomicity-check.sh
