@@ -20,36 +20,41 @@ permissions:
 
 jobs:
   quality:
-    name: 🧩 Quality Gate (Secrets + PHPUnit + Static Analysis + Audit)
+    name: 🧩 Quality Gate (Secrets + Atomicity + Tests + Static Analysis)
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
-      - name: 🧾 Checkout
+      - name: 🧾 Checkout repository
         uses: actions/checkout@v4
 
       - name: ⚙️ Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.PHP_VERSION }}
+          php-version: '8.3'
           coverage: xdebug
           extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
 
-      # 🔒 Secret scan (soft mode — does not fail pipeline)
+      # 🔒 Secret Scan (soft in branches, strict in releases)
       - name: 🔒 Gitleaks Secret Scan
-        if: startsWith(github.ref, 'refs/tags/')
-        continue-on-error: true
         uses: gitleaks/gitleaks-action@v2
+        continue-on-error: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           config-path: .gitleaks.toml
-          fail: false
+          fail: ${{ startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # ⚛️ Atomicity Integrity Check
+      - name: ⚛️ Atomicity Integrity Check
+        run: composer test:atomicity
+
+      # 📦 Composer
       - name: 📦 Install dependencies
         run: composer install --no-interaction --no-progress
 
+      # 🧪 PHPUnit
       - name: 🧪 PHPUnit
         run: |
           mkdir -p build/coverage-html
@@ -57,7 +62,8 @@ jobs:
             --coverage-clover build/coverage.xml \
             --coverage-html build/coverage-html || (echo "❌ PHPUnit failed"; exit 1)
 
-      - name: 📤 Upload coverage
+      # 📤 Coverage artifacts
+      - name: 📤 Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ github.sha }}
@@ -66,19 +72,22 @@ jobs:
             build/coverage-html
           retention-days: 14
 
-      - name: 🔍 PHPStan
+      # 🔍 PHPStan
+      - name: 🔍 PHPStan (static analysis)
         run: |
           if [ -f vendor/bin/phpstan ]; then
             vendor/bin/phpstan analyse src --level=max
           fi
 
-      - name: 🎨 PHP-CS-Fixer
+      # 🎨 PHP-CS-Fixer
+      - name: 🎨 PHP-CS-Fixer (dry-run)
         run: |
           if [ -f vendor/bin/php-cs-fixer ]; then
             vendor/bin/php-cs-fixer fix --dry-run --verbose
           fi
 
-      - name: 🔐 Composer audit
+      # 🔐 Composer audit
+      - name: 🔐 Composer Security Audit
         run: composer audit --no-interaction
 
 
