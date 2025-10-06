@@ -26,8 +26,8 @@ final class FoundationLocaleScanCommand extends Command
                 continue;
             }
             $ref = new ReflectionClass($class);
-            $hasLocale = in_array('ObjectFoundation\\Traits\\LocaleAwareTrait', array_keys($ref->getTraits()), true);
-            $hasTrans = in_array('ObjectFoundation\\Traits\\TranslatableTrait', array_keys($ref->getTraits()), true);
+            $hasLocale = in_array('ObjectFoundation\\Bridge\\Symfony\\Traits\\LocaleAwareTrait', array_keys($ref->getTraits()), true);
+            $hasTrans = in_array('ObjectFoundation\\Bridge\\Symfony\\Traits\\TranslatableTrait', array_keys($ref->getTraits()), true);
 
             $output->writeln(sprintf(
                 "<info>%s</info> — LocaleAware: %s; Translatable: %s",

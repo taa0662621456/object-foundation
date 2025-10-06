@@ -2,7 +2,7 @@
 namespace Examples\SymfonyDemo\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use ObjectFoundation\Traits\EntityFoundationTrait;
+use ObjectFoundation\Bridge\Symfony\Traits\EntityFoundationTrait;
 
 #[ORM\Entity]
 #[ORM\HasLifecycleCallbacks]

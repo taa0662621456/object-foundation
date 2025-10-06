@@ -1,14 +1,14 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ObjectFoundation\Ontology\Exporter\JsonLdExporter;
+use ObjectFoundation\Ontology\Support\ManifestCollector;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use ObjectFoundation\Ontology\Support\ManifestCollector;
-use ObjectFoundation\Ontology\Exporter\JsonLdExporter;
 
 #[AsCommand(name: 'foundation:ontology:export', description: 'Export ontology to JSON-LD (and optionally RDF in future).')]
 final class FoundationOntologyExportCommand extends Command

@@ -1,5 +1,5 @@
 <?php
-namespace ObjectFoundation\Traits;
+namespace ObjectFoundation\Bridge\Symfony\Traits;
 
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;

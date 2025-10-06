@@ -1,5 +1,6 @@
 <?php
-namespace ObjectFoundation\Traits;
+
+namespace ObjectFoundation\Bridge\Symfony\Traits;
 
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
@@ -26,6 +27,12 @@ trait AuditTrait
         $this->updatedAt = new DateTimeImmutable();
     }
 
-    public function getCreatedAt(): DateTimeImmutable { return $this->createdAt; }
-    public function getUpdatedAt(): DateTimeImmutable { return $this->updatedAt; }
+    public function getCreatedAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+    public function getUpdatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
 }

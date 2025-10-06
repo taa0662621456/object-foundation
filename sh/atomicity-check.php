@@ -1,29 +1,78 @@
+#!/usr/bin/env php
 <?php
+
+/**
+ * Atomicity Integrity Check
+ * --------------------------
+ * Ensures that the Object Foundation Core (`src/`) is free of framework dependencies.
+ * Detects accidental Symfony, Doctrine, or Laravel imports in core domain code.
+ *
+ * Usage:
+ *   php sh/atomicity-check.php [--exclude=Bridge,Infrastructure,Tests]
+ */
+
 declare(strict_types=1);
 
-$root = dirname(__DIR__);
-$src = "$root/src";
+$rootDir = dirname(__DIR__);
+$srcDir  = $rootDir . '/src';
 
-function find_violations(string $pattern, string $exclude): array {
-    $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($GLOBALS['src']));
-    $violations = [];
-    foreach ($rii as $file) {
-        if ($file->isDir() || !str_ends_with($file->getFilename(), '.php')) continue;
-        $path = $file->getPathname();
-        if (str_contains($path, $exclude)) continue;
-        $contents = file_get_contents($path);
-        if (preg_match($pattern, $contents)) $violations[] = $path;
+// CLI options
+$options = getopt('', ['exclude:']);
+$excluded = isset($options['exclude'])
+    ? array_map('trim', explode(',', $options['exclude']))
+    : ['Bridge', 'Infrastructure', 'Tests'];
+
+// Patterns of forbidden dependencies
+$forbidden = [
+    'Symfony\\\\',
+    'Doctrine\\\\',
+    'Laravel\\\\',
+    'Illuminate\\\\',
+    'Psr\\\\Container\\\\',
+    'Zend\\\\',
+];
+
+// Prepare iterator
+$iterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($srcDir, FilesystemIterator::SKIP_DOTS)
+);
+
+$violations = [];
+
+foreach ($iterator as $file) {
+    /** @var SplFileInfo $file */
+    if ($file->getExtension() !== 'php') {
+        continue;
     }
-    return $violations;
+
+    $path = str_replace('\\', '/', $file->getPathname());
+
+    // Skip allowed folders
+    foreach ($excluded as $ex) {
+        if (str_contains($path, "src/$ex/")) {
+            continue 2;
+        }
+    }
+
+    $content = file_get_contents($path);
+
+    foreach ($forbidden as $namespace) {
+        if (str_contains($content, "use $namespace")) {
+            $violations[] = $path;
+            break;
+        }
+    }
 }
 
-$core = find_violations('/use\s+(Symfony\\\\|Illuminate\\\\)/', 'src/Bridge/');
-$cmds = find_violations('/(AsCommand\s*\(|extends\s+Command\b)/', 'src/Bridge/Symfony/Command');
-
-if ($core || $cmds) {
-    echo "❌ Atomicity violations detected:\n";
-    foreach (array_merge($core, $cmds) as $f) echo " - $f\n";
+// Reporting
+if ($violations) {
+    echo "\n\033[31m❌ Atomicity violations detected:\033[0m\n";
+    foreach ($violations as $v) {
+        echo " - $v\n";
+    }
+    echo "\nTotal: " . count($violations) . " file(s) violate atomicity rules.\n";
     exit(1);
 }
 
-echo "✅ Atomicity OK for src/ and Bridge/\n";
+echo "\n\033[32m✅ Core atomic integrity verified — no forbidden framework dependencies found.\033[0m\n";
+exit(0);

@@ -1,5 +1,5 @@
 <?php
-namespace ObjectFoundation\Traits;
+namespace ObjectFoundation\Bridge\Symfony\Traits;
 
 trait LocaleAwareTrait
 {

@@ -1,11 +1,11 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ObjectFoundation\Events\OutboxStorage;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use ObjectFoundation\Events\OutboxStorage;
 
 #[AsCommand(name: 'foundation:outbox:purge', description: 'Purge dispatched events from outbox storage')]
 final class FoundationOutboxPurgeCommand extends Command

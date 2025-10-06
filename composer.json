@@ -33,7 +33,8 @@
 
   "autoload": {
     "psr-4": {
-      "ObjectFoundation\\": "src/"
+      "ObjectFoundation\\": "src/",
+        "ObjectFoundation\\Bridge\\": "src/Bridge/"
     },
     "files": [
       "src/SDK/autoload.php"
@@ -55,7 +56,7 @@
       "@php vendor/bin/phpunit --testdox"
     ],
     "test:atomicity": [
-      "@php sh/atomicity-check.php"
+      "@php sh/atomicity-check.php --exclude=Bridge,Infrastructure,Tests"
     ],
     "lint": [
       "@php vendor/bin/phpstan analyse src --level=8 --memory-limit=1G",

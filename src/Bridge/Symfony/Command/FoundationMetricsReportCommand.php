@@ -1,11 +1,11 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ObjectFoundation\Api\Observability\MetricsCollector;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use ObjectFoundation\Api\Observability\MetricsCollector;
 
 #[AsCommand(name: 'foundation:metrics:report', description: 'Print aggregated API metrics snapshot')]
 final class FoundationMetricsReportCommand extends Command

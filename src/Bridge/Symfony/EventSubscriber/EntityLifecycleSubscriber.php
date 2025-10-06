@@ -1,6 +1,6 @@
 <?php
 
-namespace ObjectFoundation\EventSubscriber;
+namespace ObjectFoundation\Bridge\Symfony\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;

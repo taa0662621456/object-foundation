@@ -2,24 +2,22 @@
 namespace ObjectFoundation\Bridge\Laravel;
 
 use Illuminate\Support\ServiceProvider;
-use ObjectFoundation\Command\{
-    FoundationOntologyQueryCommand,
-    FoundationReactionListCommand,
-    FoundationReactionEnableCommand,
-    FoundationReactionDisableCommand,
-    FoundationTraitsListCommand,
-    FoundationTraitsDescribeCommand,
-    FoundationEntityMappingDumpCommand,
-    FoundationEntityInitCommand,
-    FoundationOntologyExportCommand,
-    FoundationOntologyInspectCommand,
-    FoundationLocaleScanCommand,
-    FoundationOntologyGraphqlCommand,
-    FoundationOntologyOpenapiCommand,
-    FoundationConfigEncryptCommand,
+use ObjectFoundation\Command\{FoundationConfigEncryptCommand,
     FoundationConfigRotateKeyCommand,
-    FoundationEntityInfoCommand
-};
+    FoundationEntityInfoCommand,
+    FoundationEntityInitCommand,
+    FoundationEntityMappingDumpCommand,
+    FoundationLocaleScanCommand,
+    FoundationOntologyExportCommand,
+    FoundationOntologyGraphqlCommand,
+    FoundationOntologyInspectCommand,
+    FoundationOntologyOpenapiCommand,
+    FoundationOntologyQueryCommand,
+    FoundationReactionDisableCommand,
+    FoundationReactionEnableCommand,
+    FoundationReactionListCommand,
+    FoundationTraitsDescribeCommand,
+    FoundationTraitsListCommand};
 
 final class ObjectFoundationServiceProvider extends ServiceProvider
 {

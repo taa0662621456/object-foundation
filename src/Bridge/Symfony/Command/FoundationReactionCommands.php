@@ -1,13 +1,13 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ObjectFoundation\Reaction\{AutoExportReaction, AutoLogReaction, ReactionRegistry};
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\Table;
-use ObjectFoundation\Reaction\{ReactionRegistry, AutoLogReaction, AutoExportReaction};
 
 #[AsCommand(name: 'foundation:reaction:list', description: 'List registered reactions and their states')]
 final class FoundationReactionListCommand extends Command
@@ -39,7 +39,7 @@ final class FoundationReactionEnableCommand extends Command
     protected function configure(): void { $this->addArgument('name', InputArgument::REQUIRED); }
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $registry = FoundationReactionListCommand::bootstrap();
+        $registry = \ObjectFoundation\Bridge\Symfony\Command\FoundationReactionListCommand::bootstrap();
         $name = (string)$input->getArgument('name');
         $registry->enable($name);
         $output->writeln("<info>Enabled:</info> $name");

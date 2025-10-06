@@ -1,11 +1,11 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ObjectFoundation\Events\{OutboxStorage, WebhookDispatcher};
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use ObjectFoundation\Events\{OutboxStorage, WebhookDispatcher};
 
 #[AsCommand(name: 'foundation:outbox:dispatch', description: 'Dispatch all pending outbox events to configured webhooks')]
 final class FoundationOutboxDispatchCommand extends Command

@@ -1,12 +1,12 @@
 <?php
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ObjectFoundation\Api\OpenApiGenerator;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use ObjectFoundation\Api\OpenApiGenerator;
 
 #[AsCommand(name: 'foundation:api:openapi:generate', description: 'Generate OpenAPI spec (JSON or YAML) for REST API.')]
 final class FoundationApiOpenapiGenerateCommand extends Command

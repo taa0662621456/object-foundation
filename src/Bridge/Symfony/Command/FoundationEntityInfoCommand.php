@@ -4,10 +4,10 @@ namespace ObjectFoundation\Bridge\Symfony\Command;
 use ReflectionClass;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\Table;
 
 #[AsCommand(name: 'foundation:entity:info', description: 'Prints ontology info about given entity classes')]
 final class FoundationEntityInfoCommand extends Command

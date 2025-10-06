@@ -1,5 +1,6 @@
 <?php
-namespace ObjectFoundation\Traits;
+
+namespace ObjectFoundation\Bridge\Symfony\Traits;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -10,6 +11,12 @@ trait TokenizedTrait
     #[Assert\NotBlank(allowNull: true)]
     protected ?string $token = null;
 
-    public function getToken(): ?string { return $this->token; }
-    public function setToken(?string $token): void { $this->token = $token; }
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+    public function setToken(?string $token): void
+    {
+        $this->token = $token;
+    }
 }

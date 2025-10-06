@@ -3,9 +3,9 @@ namespace ObjectFoundation\Bridge\Symfony\Command;
 
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\Table;
 
 #[AsCommand(name: 'foundation:traits:list', description: 'List ObjectFoundation traits available in the library')]
 final class FoundationTraitsListCommand extends Command
