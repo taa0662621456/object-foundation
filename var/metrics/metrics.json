@@ -1,0 +1,9 @@
+{
+    "sum_latency": 35.449999999999996,
+    "count_total": 3,
+    "status": {
+        "404": 3
+    },
+    "cache_hit": 0,
+    "auth_fail": 0
+}

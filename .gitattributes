@@ -57,3 +57,5 @@
 *.log   linguist-generated
 .DS_Store linguist-generated
 .idea/** linguist-generated
+.phpunit.cache/ export-ignore
+
