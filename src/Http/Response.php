@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace ObjectFoundation\Http;
 
-final class Response
+final readonly class Response
 {
     public function __construct(
-        public readonly int $status,
-        public readonly array $headers = [],
-        public readonly string $body = ''
+        public int    $status,
+        public array  $headers = [],
+        public string $body = ''
     ) {}
 
     public function send(): void

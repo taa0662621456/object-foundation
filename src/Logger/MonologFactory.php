@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace ObjectFoundation\Logger;
 
+use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\ErrorLogHandler;
@@ -23,17 +24,17 @@ final class MonologFactory
         if (!is_dir($logDir)) {
             @mkdir($logDir, 0777, true);
         }
-        $fileHandler = new StreamHandler($logDir . '/app.log', Logger::INFO);
+        $fileHandler = new StreamHandler($logDir . '/app.log', Level::Info);
         $fileHandler->setFormatter($formatter);
         $logger->pushHandler($fileHandler);
 
         // Stdout handler (for Docker/CI)
-        $stdoutHandler = new StreamHandler('php://stdout', Logger::INFO);
+        $stdoutHandler = new StreamHandler('php://stdout', Level::Info);
         $stdoutHandler->setFormatter($formatter);
         $logger->pushHandler($stdoutHandler);
 
         // PHP error log fallback
-        $errorLogHandler = new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::WARNING);
+        $errorLogHandler = new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Level::Info);
         $errorLogHandler->setFormatter($formatter);
         $logger->pushHandler($errorLogHandler);
 

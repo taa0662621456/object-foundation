@@ -63,7 +63,7 @@ final class Parser
     }
 
     private function peek() {
-        return $this->tokens[$this->pos + 0] ?? null; }
+        return $this->tokens[$this->pos] ?? null; }
     private function eat($expected = null) {
         $tok = $this->tokens[$this->pos] ?? null;
         if ($expected !== null) {
@@ -82,8 +82,10 @@ final class Parser
     // andExpr := unaryExpr (AND unaryExpr)*
     // unaryExpr := NOT unaryExpr | primary
     // primary := predicate | '(' expr ')'
-    private function parseExpr() { return $this->parseOr(); }
-    private function parseOr() {
+    private function parseExpr(): array
+    { return $this->parseOr(); }
+    private function parseOr(): array
+    {
         $node = $this->parseAnd();
         while (($t=$this->peek()) === 'OR') {
             $this->eat('OR');
@@ -92,7 +94,8 @@ final class Parser
         }
         return $node;
     }
-    private function parseAnd() {
+    private function parseAnd(): array
+    {
         $node = $this->parseUnary();
         while (($t=$this->peek()) === 'AND') {
             $this->eat('AND');
@@ -101,7 +104,8 @@ final class Parser
         }
         return $node;
     }
-    private function parseUnary() {
+    private function parseUnary(): array
+    {
         if ($this->peek() === 'NOT') {
             $this->eat('NOT');
             $node = $this->parseUnary();
@@ -109,7 +113,8 @@ final class Parser
         }
         return $this->parsePrimary();
     }
-    private function parsePrimary() {
+    private function parsePrimary(): array
+    {
         $t = $this->peek();
         if ($t === '(') {
             $this->eat('(');
@@ -119,7 +124,8 @@ final class Parser
         }
         return $this->parsePredicate();
     }
-    private function parsePredicate() {
+    private function parsePredicate(): array
+    {
         $t = $this->peek();
         if ($t === 'HAS') {
             $this->eat('HAS');

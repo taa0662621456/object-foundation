@@ -16,6 +16,9 @@ final class FoundationConfigEncryptCommand extends Command
              ->addArgument('json', InputArgument::REQUIRED, 'JSON string to encrypt');
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $key = (string)$input->getArgument('key');

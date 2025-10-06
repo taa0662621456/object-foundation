@@ -8,6 +8,9 @@ final class RedisCacheAdapter implements CacheAdapter
     private Redis $redis;
     private string $prefix;
 
+    /**
+     * @throws \RedisException
+     */
     public function __construct(string $url, string $prefix = 'of:cache:')
     {
         $this->prefix = $prefix;
@@ -24,6 +27,9 @@ final class RedisCacheAdapter implements CacheAdapter
 
     private function k(string $key): string { return $this->prefix . sha1($key); }
 
+    /**
+     * @throws \RedisException
+     */
     public function get(string $key): ?array
     {
         $v = $this->redis->get($this->k($key));
@@ -32,17 +38,26 @@ final class RedisCacheAdapter implements CacheAdapter
         return is_array($data) ? $data : null;
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function set(string $key, array $value, int $ttl): void
     {
         $value['expires'] = time() + $ttl;
         $this->redis->set($this->k($key), json_encode($value, JSON_UNESCAPED_SLASHES), $ttl);
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function delete(string $key): void
     {
         $this->redis->del($this->k($key));
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function clear(): void
     {
         // delete by prefix (SCAN)

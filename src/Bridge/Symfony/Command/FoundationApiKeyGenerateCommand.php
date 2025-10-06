@@ -9,6 +9,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'foundation:api:key:generate', description: 'Generate a random API key and print ENV line')]
 final class FoundationApiKeyGenerateCommand extends Command
 {
+    /**
+     * @throws \Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $key = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');

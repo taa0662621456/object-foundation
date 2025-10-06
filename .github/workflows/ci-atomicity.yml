@@ -1,0 +1,16 @@
+name: Atomicity Check
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  atomicity:
+    name: Atomicity (core vs bridges)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run atomicity check
+        run: bash scripts/atomicity-check.sh

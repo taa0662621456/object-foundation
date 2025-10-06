@@ -20,6 +20,9 @@ final class FoundationOntologyExportCommand extends Command
              ->addOption('out', 'o', InputOption::VALUE_REQUIRED, 'Output path', 'var/export/ontology.jsonld');
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $classes = $input->getArgument('classes');
@@ -33,7 +36,7 @@ final class FoundationOntologyExportCommand extends Command
                 $output->writeln("<error>Class not found:</error> $class");
                 continue;
             }
-            $$manifests[] =($collector->manifestFor($class));
+            $manifests[] =($collector->manifestFor($class));
         }
 
         if ($format !== 'jsonld') {

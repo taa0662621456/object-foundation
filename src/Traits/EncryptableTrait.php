@@ -6,6 +6,9 @@ use RuntimeException;
 
 trait EncryptableTrait
 {
+    /**
+     * @throws \Exception
+     */
     protected function foundationEncrypt(string $plaintext, string $key, string $cipher = 'AES-256-CBC'): string
     {
         $ivlen = openssl_cipher_iv_length($cipher);

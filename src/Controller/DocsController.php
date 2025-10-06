@@ -16,7 +16,7 @@
                 $json = $gen->toJson($gen->build());
                 return Response::json($json);
             }
-            return Response::json(['openapi' => 'not-configured'], 200);
+            return Response::json(['openapi' => 'not-configured']);
         }
 
         public function swagger(Request $req): Response

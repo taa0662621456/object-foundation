@@ -8,9 +8,9 @@ use ObjectFoundation\Events\{EntityCreatedEvent, EntityUpdatedEvent, ConfigChang
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Throwable;
 
-final class EntityLifecycleSubscriber implements EventSubscriber
+final readonly class EntityLifecycleSubscriber implements EventSubscriber
 {
-    public function __construct(private readonly EventDispatcherInterface $dispatcher) {}
+    public function __construct(private EventDispatcherInterface $dispatcher) {}
 
     public function getSubscribedEvents(): array
     {

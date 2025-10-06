@@ -4,9 +4,9 @@ namespace ObjectFoundation\Reaction;
 use DateTimeImmutable;
 use ObjectFoundation\Events\{EntityCreatedEvent, EntityUpdatedEvent, SoftDeletedEvent, ConfigChangedEvent};
 
-final class AutoLogReaction
+final readonly class AutoLogReaction
 {
-    public function __construct(private readonly string $logFile = 'var/export/foundation.log') {}
+    public function __construct(private string $logFile = 'var/export/foundation.log') {}
 
     public function __invoke(object $event): void
     {

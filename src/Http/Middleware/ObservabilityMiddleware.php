@@ -7,6 +7,7 @@ use ObjectFoundation\Http\{Request, Response};
 use ObjectFoundation\Logger\MonologFactory;
 // Optional user classes (if present)
 use ObjectFoundation\Api\Observability\{MetricsCollector, RequestLogger};
+use Throwable;
 
 final class ObservabilityMiddleware
 {
@@ -22,7 +23,7 @@ final class ObservabilityMiddleware
             $status = $resp->status;
             $cacheHit = array_key_exists('ETag', $resp->headers);
             return $resp;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $logger->error('Unhandled exception', ['err' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return Response::json(['error' => 'Internal Server Error'], 500);
         } finally {

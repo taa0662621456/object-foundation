@@ -5,9 +5,9 @@ use ObjectFoundation\Events\{EntityUpdatedEvent, EntityCreatedEvent};
 use ObjectFoundation\Ontology\Support\ManifestCollector;
 use ObjectFoundation\Ontology\Exporter\JsonLdExporter;
 
-final class AutoExportReaction
+final readonly class AutoExportReaction
 {
-    public function __construct(private readonly string $out = 'var/export/auto-entities.jsonld') {}
+    public function __construct(private string $out = 'var/export/auto-entities.jsonld') {}
 
     public function __invoke(object $event): void
     {

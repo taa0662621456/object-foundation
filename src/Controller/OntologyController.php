@@ -15,7 +15,7 @@ final class OntologyController
     {
         $classes = isset($req->query['classes']) ? (array)$req->query['classes'] : [];
         if (!class_exists(ManifestCollector::class) || !class_exists(ManifestCache::class)) {
-            return Response::json(['entities' => [], 'note' => 'Ontology components not wired'], 200);
+            return Response::json(['entities' => [], 'note' => 'Ontology components not wired']);
         }
 
         $collector = new ManifestCollector();
@@ -43,7 +43,7 @@ final class OntologyController
             return Response::json(['error' => 'class not found'], 404);
         }
         if (!class_exists(ManifestCollector::class) || !class_exists(ManifestCache::class)) {
-            return Response::json(['entity' => [], 'note' => 'Ontology components not wired'], 200);
+            return Response::json(['entity' => [], 'note' => 'Ontology components not wired']);
         }
         $collector = new ManifestCollector();
         $cache = new ManifestCache();

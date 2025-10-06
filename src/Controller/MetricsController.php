@@ -22,6 +22,6 @@ final class MetricsController
             }
             return Response::json($snapshot);
         }
-        return Response::json(['metrics' => 'not-configured'], 200);
+        return Response::json(['metrics' => 'not-configured']);
     }
 }

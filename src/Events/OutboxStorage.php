@@ -11,6 +11,9 @@ final class OutboxStorage
     private ?Redis $redis = null;
     private string $prefix = 'of:outbox:';
 
+    /**
+     * @throws \RedisException
+     */
     public function __construct(?string $driver = null, ?string $file = null)
     {
         $this->driver = $driver ?? (getenv('OBJECT_FOUNDATION_OUTBOX_DRIVER') ?: 'file');
@@ -32,6 +35,9 @@ final class OutboxStorage
         }
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function append(string $event, array $payload): string
     {
         $rec = [
@@ -53,6 +59,9 @@ final class OutboxStorage
         return $rec['id'];
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function allUndispatched(int $limit = 100): array
     {
         if ($this->driver === 'redis' && $this->redis) {
@@ -70,6 +79,9 @@ final class OutboxStorage
         return array_values(array_filter($data, fn($r) => !$r['dispatched']));
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function markDispatched(string $id): void
     {
         if ($this->driver === 'redis' && $this->redis) {
@@ -103,6 +115,9 @@ final class OutboxStorage
         $this->writeFile($data);
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function purgeDispatched(): int
     {
         if ($this->driver === 'redis' && $this->redis) {
@@ -128,6 +143,9 @@ final class OutboxStorage
         file_put_contents($this->file, json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
     }
 
+    /**
+     * @throws \Exception
+     */
     private function uuid(): string
     {
         $d = random_bytes(16);

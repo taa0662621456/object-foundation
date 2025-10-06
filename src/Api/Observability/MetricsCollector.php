@@ -9,6 +9,9 @@ final class MetricsCollector
     private ?Redis $redis = null;
     private string $prefix = 'of:metrics:';
 
+    /**
+     * @throws \RedisException
+     */
     public function __construct(?string $storage = null)
     {
         $this->storage = $storage ?? (getenv('OBJECT_FOUNDATION_METRICS_FILE') ?: 'var/metrics/metrics.json');
@@ -28,6 +31,9 @@ final class MetricsCollector
         }
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function addRequest(float $durationMs, int $status, bool $cacheHit = false, bool $authFail = false): void
     {
         if ($this->redis) {
@@ -47,6 +53,9 @@ final class MetricsCollector
         $this->writeFile($data);
     }
 
+    /**
+     * @throws \RedisException
+     */
     public function snapshot(): array
     {
         if ($this->redis) {

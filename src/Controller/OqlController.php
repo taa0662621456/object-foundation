@@ -26,7 +26,7 @@ final class OqlController
         }
 
         if (!class_exists(Parser::class) || !class_exists(Executor::class) || !class_exists(ManifestCache::class)) {
-            return Response::json(['rows' => [], 'note' => 'OQL components not wired'], 200);
+            return Response::json(['rows' => [], 'note' => 'OQL components not wired']);
         }
 
         $parser = new Parser();

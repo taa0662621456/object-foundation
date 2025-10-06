@@ -3,16 +3,16 @@ declare(strict_types=1);
 
 namespace ObjectFoundation\Http;
 
-final class Request
+final readonly class Request
 {
     public function __construct(
-        public readonly string $method,
-        public readonly string $path,
-        public readonly array $headers,
-        public readonly array $query,
-        public readonly array $body,
-        public readonly string $ip,
-        public readonly float $startedAt,
+        public string $method,
+        public string $path,
+        public array  $headers,
+        public array  $query,
+        public array  $body,
+        public string $ip,
+        public float  $startedAt,
     ) {}
 
     public static function fromGlobals(): self

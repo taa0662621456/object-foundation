@@ -7,6 +7,7 @@ final class ManifestCollector
 {
     /**
      * Build a manifest entry for the given FQCN via reflection.
+     * @throws \ReflectionException
      */
     public function manifestFor(string $class): array
     {

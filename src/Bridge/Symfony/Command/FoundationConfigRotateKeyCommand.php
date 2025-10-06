@@ -17,6 +17,9 @@ final class FoundationConfigRotateKeyCommand extends Command
              ->addArgument('payload', InputArgument::REQUIRED, 'Base64 payload produced by encrypt command');
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $cipher = 'AES-256-CBC';
