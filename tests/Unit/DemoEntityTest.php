@@ -4,8 +4,8 @@ namespace ObjectFoundation\Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Examples\SymfonyDemo\Entity\DemoEntity;
+use Ramsey\Uuid\Uuid;
 use ReflectionClass;
-use Symfony\Component\Uid\Uuid;
 
 final class DemoEntityTest extends TestCase
 {
