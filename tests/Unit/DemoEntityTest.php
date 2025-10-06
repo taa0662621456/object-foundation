@@ -4,7 +4,7 @@ namespace ObjectFoundation\Tests\Unit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Examples\SymfonyDemo\Entity\DemoEntity;
-use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
 
 final class DemoEntityTest extends TestCase
@@ -15,6 +15,7 @@ final class DemoEntityTest extends TestCase
     public function testDefaults(): void
     {
         $e = new DemoEntity();
+
         // simulate PrePersist lifecycle
         $ref = new ReflectionClass($e);
         foreach (['_identityInit','_auditOnCreate'] as $m) {
@@ -22,8 +23,10 @@ final class DemoEntityTest extends TestCase
                 $ref->getMethod($m)->invoke($e);
             }
         }
+
         $this->assertTrue($e->isPublished());
-        $this->assertInstanceOf(Uuid::class, $e->getUuid());
+        $this->assertInstanceOf(UuidInterface::class, $e->getUuid());
+        $this->assertNotEmpty($e->getUuid()->toString());
         $this->assertNotEmpty($e->getSlug());
     }
 
