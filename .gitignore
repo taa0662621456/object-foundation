@@ -31,6 +31,8 @@ Thumbs.db
 /var/backups/
 /var/build/
 /var/storage/
+/var/metrics/
+/var/runtime/
 
 # ──────────────────────────────────────────────
 #  📦 Node / Frontend
@@ -122,3 +124,4 @@ Thumbs.db
 !/.editorconfig
 !/.gitattributes
 !/.php-cs-fixer.cache
+!/var/metrics/

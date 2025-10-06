@@ -82,11 +82,30 @@ jobs:
       - name: ⚛️ Atomicity Integrity Check
         run: composer test:atomicity
 
-      # 📦 Composer
+      # 📦 Composer install
       - name: 📦 Install dependencies
         run: composer install --no-interaction --no-progress
 
-      # 🧪 PHPUnit
+      # 🧩 Validate PHPUnit XML configuration
+      - name: 🧩 Validate phpunit.xml.dist
+        run: |
+          if ! command -v xmllint &> /dev/null; then
+            sudo apt-get update -qq && sudo apt-get install -y libxml2-utils
+          fi
+
+          echo "Validating phpunit.xml.dist..."
+          xmllint --noout phpunit.xml.dist 2> xmllint-report.txt || true
+
+          if grep -q "error" xmllint-report.txt || grep -q "Element" xmllint-report.txt; then
+            echo "❌ XML validation issues detected:" >> $GITHUB_STEP_SUMMARY
+            cat xmllint-report.txt >> $GITHUB_STEP_SUMMARY
+            echo "Validation failed"
+            exit 1
+          else
+            echo "✅ phpunit.xml.dist validation OK" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # 🧪 PHPUnit (with coverage)
       - name: 🧪 PHPUnit
         run: |
           mkdir -p build/coverage-html
@@ -94,7 +113,7 @@ jobs:
             --coverage-clover build/coverage.xml \
             --coverage-html build/coverage-html || (echo "❌ PHPUnit failed"; exit 1)
 
-      # 📤 Coverage artifacts
+      # 📤 Upload coverage artifacts
       - name: 📤 Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
@@ -122,6 +141,15 @@ jobs:
       - name: 🔐 Composer Security Audit
         run: composer audit --no-interaction
 
+      # 🧹 Cleanup old caches (post-success maintenance)
+      - name: 🧹 Cleanup old caches
+        if: ${{ success() }}
+        run: |
+          echo "🧹 Cleaning up old caches..."
+          sudo rm -rf /var/cache/apt/archives/*.deb || true
+          rm -rf ~/.composer/cache/files/* || true
+          rm -rf .phpunit.cache || true
+          echo "✅ Cache cleanup completed"
 
   release:
     name: 🚀 Release Builder (Stable & Nightly)
