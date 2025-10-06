@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-$root = dirname(__DIR__, 1);
+$root = dirname(__DIR__);
 $src = "$root/src";
 
 function find_violations(string $pattern, string $exclude): array {
