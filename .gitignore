@@ -74,6 +74,8 @@ Thumbs.db
 *.swp
 *.swo
 *~
+# PHP-CS-Fixer cache
+.php-cs-fixer.cache
 
 # ──────────────────────────────────────────────
 #  🔐 Local environment (never commit)
@@ -119,3 +121,4 @@ Thumbs.db
 !/.yamllint.yml
 !/.editorconfig
 !/.gitattributes
+!/.php-cs-fixer.cache
