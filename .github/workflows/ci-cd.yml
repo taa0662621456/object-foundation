@@ -29,6 +29,15 @@ jobs:
       - name: 🧾 Checkout repository
         uses: actions/checkout@v4
 
+      # 🧹 Pre-clean build and runtime directories
+      - name: 🧹 Clean build/runtime directories (pre)
+        run: |
+          echo "🧹 Cleaning old runtime and build artifacts..."
+          rm -rf var/metrics var/runtime var/tmp build dist || true
+          find var -type f -name "*.log" -delete || true
+          git clean -xdf -e vendor -e .phpunit.cache -e build -e dist -e .git || true
+          echo "✅ Workspace cleaned"
+
       - name: ⚙️ Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -36,7 +45,7 @@ jobs:
           coverage: xdebug
           extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
 
-      # ⚡ Cache APT packages (yamllint, system tools)
+      # ⚡ Cache APT packages
       - name: ⚡ Cache APT packages
         uses: actions/cache@v4
         with:
@@ -99,7 +108,6 @@ jobs:
           if grep -q "error" xmllint-report.txt || grep -q "Element" xmllint-report.txt; then
             echo "❌ XML validation issues detected:" >> $GITHUB_STEP_SUMMARY
             cat xmllint-report.txt >> $GITHUB_STEP_SUMMARY
-            echo "Validation failed"
             exit 1
           else
             echo "✅ phpunit.xml.dist validation OK" >> $GITHUB_STEP_SUMMARY
@@ -141,15 +149,14 @@ jobs:
       - name: 🔐 Composer Security Audit
         run: composer audit --no-interaction
 
-      # 🧹 Cleanup old caches (post-success maintenance)
-      - name: 🧹 Cleanup old caches
+      # 🧹 Cleanup build/runtime directories (post)
+      - name: 🧹 Cleanup build/runtime directories (post)
         if: ${{ success() }}
         run: |
-          echo "🧹 Cleaning up old caches..."
-          sudo rm -rf /var/cache/apt/archives/*.deb || true
-          rm -rf ~/.composer/cache/files/* || true
-          rm -rf .phpunit.cache || true
-          echo "✅ Cache cleanup completed"
+          echo "🧹 Cleaning up temporary and runtime artifacts..."
+          rm -rf var/metrics var/runtime var/tmp build dist yamllint-report.txt || true
+          find var -type f -name "*.log" -delete || true
+          echo "✅ Cleanup completed successfully"
 
   release:
     name: 🚀 Release Builder (Stable & Nightly)
