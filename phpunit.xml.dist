@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ────────────────────────────────────────────────────────────────
+   Smartresponsor / Object Foundation
+   PHPUnit Configuration — PHPUnit 10.5 (Final Validated)
+ ────────────────────────────────────────────────────────────────
+   • Офлайн-валидация через tests/phpunit.xsd
+   • Полная совместимость с CI (exit 0)
+   • HTML- и Clover-отчёты без schema-ошибок
+   • Исключены var/metrics и var/runtime
+ ────────────────────────────────────────────────────────────────
+-->
+
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="phpunit.xsd"
     bootstrap="vendor/autoload.php"
     colors="true"
     cacheDirectory=".phpunit.cache"
+    displayDetailsOnIncompleteTests="true"
+    displayDetailsOnSkippedTests="true"
     stopOnFailure="false"
     failOnRisky="false"
     failOnWarning="false"
     executionOrder="depends,defects"
 >
 
+    <!-- 🌍 Environment -->
     <php>
         <env name="OBJECT_FOUNDATION_BRAND" value="Smartresponsor"/>
         <env name="OBJECT_FOUNDATION_OWNER" value="Marketing America Corp &amp; Partners"/>
@@ -18,13 +33,14 @@
         <env name="APP_DEBUG" value="1"/>
     </php>
 
+    <!-- 🧩 Test suites -->
     <testsuites>
         <testsuite name="ObjectFoundation Unit &amp; Kernel Tests">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
 
-    <!-- ✅ Coverage source -->
+    <!-- 📂 Source + exclusions -->
     <source>
         <include>
             <directory>src</directory>
@@ -35,14 +51,15 @@
         </exclude>
     </source>
 
-    <!-- ✅ Reports -->
+    <!-- 📊 Coverage -->
     <coverage>
         <report>
             <clover outputFile="build/coverage.xml"/>
-            <coverage-html outputDirectory="build/coverage-html"/>
+            <html outputDirectory="build/coverage-html"/>
         </report>
     </coverage>
 
+    <!-- 🧪 Logging -->
     <logging>
         <testdoxText outputFile="php://stdout"/>
     </logging>

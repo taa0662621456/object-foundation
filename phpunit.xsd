@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Local offline schema for PHPUnit 10.x
-  Covers minimal elements used in Object Foundation:
-  php, testsuites, source, coverage, report, logging.
-  Includes support for <coverage-html> so PhpStorm
-  and xmllint validate without "unknown element" warnings.
+  Minimal local schema for PHPUnit 10.x
+  Covers php, testsuites, source, coverage/report, logging.
+  Works offline and matches official element names.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            elementFormDefault="qualified"
            attributeFormDefault="unqualified">
 
-    <!-- Root -->
     <xs:element name="phpunit">
         <xs:complexType>
             <xs:sequence>
 
-                <!-- PHP environment -->
+                <!-- php -->
                 <xs:element name="php" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
@@ -29,7 +26,7 @@
                     </xs:complexType>
                 </xs:element>
 
-                <!-- Test suites -->
+                <!-- testsuites -->
                 <xs:element name="testsuites" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
@@ -45,7 +42,7 @@
                     </xs:complexType>
                 </xs:element>
 
-                <!-- Source -->
+                <!-- source -->
                 <xs:element name="source" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
@@ -67,40 +64,23 @@
                     </xs:complexType>
                 </xs:element>
 
-                <!-- Coverage section -->
+                <!-- coverage -->
                 <xs:element name="coverage" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="report" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
-
-                                        <!-- Clover -->
                                         <xs:element name="clover" minOccurs="0" maxOccurs="1">
                                             <xs:complexType>
                                                 <xs:attribute name="outputFile" type="xs:string" use="required"/>
                                             </xs:complexType>
                                         </xs:element>
-
-                                        <!-- ✅ Added new element -->
-                                        <xs:element name="coverage-html" minOccurs="0" maxOccurs="1">
+                                        <xs:element name="html" minOccurs="0" maxOccurs="1">
                                             <xs:complexType>
                                                 <xs:attribute name="outputDirectory" type="xs:string" use="required"/>
                                             </xs:complexType>
                                         </xs:element>
-
-                                        <!-- Optional other formats -->
-                                        <xs:element name="xml" minOccurs="0" maxOccurs="1">
-                                            <xs:complexType>
-                                                <xs:attribute name="outputDirectory" type="xs:string" use="required"/>
-                                            </xs:complexType>
-                                        </xs:element>
-                                        <xs:element name="text" minOccurs="0" maxOccurs="1">
-                                            <xs:complexType>
-                                                <xs:attribute name="outputFile" type="xs:string" use="optional"/>
-                                            </xs:complexType>
-                                        </xs:element>
-
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
@@ -108,7 +88,7 @@
                     </xs:complexType>
                 </xs:element>
 
-                <!-- Logging -->
+                <!-- logging -->
                 <xs:element name="logging" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
@@ -123,7 +103,7 @@
 
             </xs:sequence>
 
-            <!-- Common attributes -->
+            <!-- attributes -->
             <xs:attribute name="bootstrap" type="xs:string" use="optional"/>
             <xs:attribute name="colors" type="xs:string" use="optional"/>
             <xs:attribute name="cacheDirectory" type="xs:string" use="optional"/>
