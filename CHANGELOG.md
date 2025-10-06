@@ -1,6 +1,10 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
-## [v2.5.0-branding-update] — 2025-10-05
-### Added
-- Branding update, documentation, and logo integration.
+## v2.5.3 — Cross-platform Atomicity Guard
+**Date:** 2025-10-05
+
+- Added PHP-based atomicity checker (scripts/atomicity-check.php).
+- Added composer script: `composer test:atomicity`.
+- Made atomicity validation cross-platform (Windows/macOS/Linux).
+- Introduced `ramsey/uuid` as core UUID dependency.
+- Updated documentation and changelog.
