@@ -1,0 +1,47 @@
+name: 🧪 CI Tests
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    name: PHPUnit & Atomicity
+
+    steps:
+      - name: 🧾 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
+
+      - name: 🧩 Validate composer.json
+        run: |
+          composer validate --strict
+          echo "✅ composer.json validation passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📦 Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: 🧪 Run PHPUnit tests
+        run: |
+          if [ -f vendor/bin/phpunit ]; then
+            vendor/bin/phpunit --testdox --colors=always
+            echo "✅ PHPUnit passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ PHPUnit not found — skipping" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🧱 Atomicity check
+        run: |
+          if composer run-script --list | grep -q "test:atomicity"; then
+            composer test:atomicity
+            echo "✅ Atomicity OK" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ No atomicity test defined — skipping" >> $GITHUB_STEP_SUMMARY
+          fi

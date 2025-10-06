@@ -1,0 +1,54 @@
+name: 🧹 Lint & Static Analysis
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint & Analyse PHP
+
+    steps:
+      - name: 🧾 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: phpstan, rector, php-cs-fixer
+          extensions: mbstring, intl, pdo, dom, curl, zip
+
+      - name: 🧩 Validate composer.json
+        run: |
+          composer validate --strict
+          echo "✅ composer.json validation passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔍 Run PHPStan
+        run: |
+          if [ -f vendor/bin/phpstan ]; then
+            vendor/bin/phpstan analyse src --level=8 --memory-limit=1G --ansi
+            echo "✅ PHPStan passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ phpstan not found — skipping" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🧠 Run Rector (dry-run)
+        run: |
+          if [ -f vendor/bin/rector ]; then
+            vendor/bin/rector process src --dry-run --no-progress-bar --ansi
+            echo "✅ Rector dry-run passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Rector not installed — skipping" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🎨 Check code style
+        run: |
+          if [ -f vendor/bin/php-cs-fixer ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
+            echo "✅ Code style OK" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ php-cs-fixer not installed — skipping" >> $GITHUB_STEP_SUMMARY
+          fi
