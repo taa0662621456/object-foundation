@@ -3,6 +3,7 @@
 $finder = PhpCsFixer\Finder::create()
     ->in(['src', 'tests'])
     ->name('*.php')
+    ->exclude(['var/metrics', 'var/runtime'])
     ->notName('*.blade.php')
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);

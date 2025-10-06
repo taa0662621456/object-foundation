@@ -32,6 +32,10 @@
         <include>
             <directory>src</directory>
         </include>
+        <exclude>
+            <directory>var/metrics</directory>
+            <directory>var/runtime</directory>
+        </exclude>
     </source>
 
     <logging>

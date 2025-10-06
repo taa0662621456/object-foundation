@@ -5,6 +5,9 @@ parameters:
     level: 8
     paths:
         - src
+    excludePaths:
+            - var/metrics/*
+            - var/runtime/*
     inferPrivatePropertyTypeFromConstructor: true
     checkGenericClassInNonGenericObjectType: false
     treatPhpDocTypesAsCertain: true
