@@ -5,9 +5,6 @@
     bootstrap="vendor/autoload.php"
     colors="true"
     cacheDirectory=".phpunit.cache"
-    beStrictAboutOutputDuringTests="true"
-    displayDetailsOnIncompleteTests="true"
-    displayDetailsOnSkippedTests="true"
     stopOnFailure="false"
     failOnRisky="false"
     failOnWarning="false"
@@ -27,23 +24,22 @@
         </testsuite>
     </testsuites>
 
-    <!-- ✅ NEW FORMAT for PHPUnit 10 -->
+    <!-- ✅ Coverage / Source -->
     <source>
         <include>
             <directory>src</directory>
         </include>
-        <exclude>
-            <directory>var/metrics</directory>
-            <directory>var/runtime</directory>
-        </exclude>
     </source>
 
+    <!-- ✅ Reports (coverage output) -->
+    <report>
+        <clover outputFile="build/coverage.xml"/>
+        <html outputDirectory="build/coverage-html"/>
+    </report>
+
+    <!-- ✅ Logging (console, junit, etc.) -->
     <logging>
         <testdoxText outputFile="php://stdout"/>
-        <report>
-            <clover outputFile="build/coverage.xml"/>
-            <html outputDirectory="build/coverage-html"/>
-        </report>
     </logging>
 
 </phpunit>
