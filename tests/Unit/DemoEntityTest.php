@@ -23,7 +23,7 @@ final class DemoEntityTest extends TestCase
             }
         }
         $this->assertTrue($e->isPublished());
-        $this->assertInstanceOf(Uuid::class, $e->getUuid());
+        $this->assertInstanceOf(Uuid::uuid4(), $e->getUuid());
         $this->assertNotEmpty($e->getSlug());
     }
 
