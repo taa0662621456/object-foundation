@@ -1,6 +1,6 @@
 {
   "name": "isponsor/object-foundation",
-  "description": "Atomic ontology traits for PHP entities (Doctrine/Symfony ready).",
+  "description": "Atomic ontology traits and ontology-driven architecture core for PHP entities (Doctrine/Symfony ready).",
   "type": "library",
   "license": "MIT",
   "authors": [
@@ -11,6 +11,7 @@
       "role": "Maintainer"
     }
   ],
+
   "require": {
     "php": ">=8.3",
     "doctrine/orm": "^2.16 || ^3.0",
@@ -19,6 +20,7 @@
     "predis/predis": "^3.2",
     "ramsey/uuid": "^4.7"
   },
+
   "require-dev": {
     "phpunit/phpunit": "^9.6 || ^10.5",
     "symfony/var-dumper": "^7.0",
@@ -28,6 +30,7 @@
     "rector/rector": "^1.2",
     "friendsofphp/php-cs-fixer": "^3.20"
   },
+
   "autoload": {
     "psr-4": {
       "ObjectFoundation\\": "src/"
@@ -36,34 +39,76 @@
       "src/SDK/autoload.php"
     ]
   },
+
   "autoload-dev": {
     "psr-4": {
       "ObjectFoundation\\Tests\\": "tests/",
       "Examples\\SymfonyDemo\\": "tests/Examples/SymfonyDemo/"
     }
   },
+
   "minimum-stability": "stable",
   "prefer-stable": true,
+
   "scripts": {
+    "test": [
+      "@php vendor/bin/phpunit --testdox"
+    ],
     "test:atomicity": [
       "@php sh/atomicity-check.php"
+    ],
+    "lint": [
+      "@php vendor/bin/phpstan analyse src --level=8 --memory-limit=1G",
+      "@php vendor/bin/rector process src --dry-run",
+      "@php vendor/bin/php-cs-fixer fix --dry-run --diff"
+    ],
+    "fix": [
+      "@php vendor/bin/php-cs-fixer fix --verbose"
     ]
   },
-    "test": "phpunit --testdox",
-    "lint": [
-      "phpstan analyse src --level=8 --memory-limit=1G",
-      "rector process src --dry-run",
-      "php-cs-fixer fix --dry-run --diff"
-    ],
-    "bin": [
-      "bin/foundation"
+
+  "bin": [
+    "bin/foundation"
   ],
-  "version": "2.7.1-beta",
-  "extra": {
-    "object-foundation-next-horizon": "visionary roadmap 1.5\u20133.0"
+
+  "config": {
+    "sort-packages": true,
+    "optimize-autoloader": true,
+    "preferred-install": {
+      "*": "dist"
+    },
+    "allow-plugins": {
+      "phpstan/extension-installer": true,
+      "dealerdirect/phpcodesniffer-composer-installer": false,
+      "composer/package-versions-deprecated": true
+    },
+    "process-timeout": 300
   },
+
+  "provide": {
+    "object-foundation/core": "self.version",
+    "object-foundation/ontology": "self.version",
+    "object-foundation/api": "self.version"
+  },
+
+  "replace": {
+    "object-foundation/core": "self.version",
+    "object-foundation/ontology": "self.version",
+    "object-foundation/api": "self.version",
+    "isponsor/object-foundation": "self.version"
+  },
+
+  "extra": {
+    "object-foundation-next-horizon": "visionary roadmap 1.5–3.0",
+    "branch-alias": {
+      "dev-master": "2.x-dev",
+      "dev-main": "2.x-dev"
+    }
+  },
+
   "suggest": {
     "object-foundation-bridge-symfony": "Bundle integration for Symfony",
-    "object-foundation-bridge-laravel": "Service Provider integration for Laravel"
+    "object-foundation-bridge-laravel": "Service Provider integration for Laravel",
+    "object-foundation-bridge-api": "REST/GraphQL gateway adapter for Object Foundation"
   }
 }
