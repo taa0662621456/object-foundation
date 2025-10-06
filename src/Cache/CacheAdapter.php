@@ -1,4 +1,5 @@
 <?php
+
 namespace ObjectFoundation\Cache;
 
 interface CacheAdapter

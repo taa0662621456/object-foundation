@@ -1,4 +1,5 @@
 <?php
+
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
 use ReflectionClass;
@@ -50,16 +51,18 @@ final class FoundationEntityMappingDumpCommand extends Command
         $out = (string)$input->getOption('out');
 
         if ($format === 'json') {
-            $payload = json_encode($map, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+            $payload = json_encode($map, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         } else {
             // naive YAML emitter
-            $payload = "";
+            $payload = '';
             foreach ($map as $cls => $fields) {
-                $payload .= $cls . ":
-";
-                foreach ($fields as $k=>$v) $payload .= "  " + $k + ": " + $v + "\n";
+                $payload .= $cls . ':
+';
+                foreach ($fields as $k => $v) {
+                    $payload .= '  ' + $k + ': ' + $v + "\n";
+                }
             }
-            $payload = str_replace("+", "", $payload); // fix accidental plus signs if any
+            $payload = str_replace('+', '', $payload); // fix accidental plus signs if any
         }
 
         @mkdir(dirname($out), 0777, true);

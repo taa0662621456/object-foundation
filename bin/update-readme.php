@@ -74,7 +74,7 @@ function contactsTable(string $lang, array $meta): string {
             ['Бренды', $meta['brandA'].', '.$meta['brandB']],
             ['Сайт', '['.$meta['site'].']('.$meta['site'].')'],
         ];
-        $updated = "_Обновлено: $date_";
+        $updated = "_Обновлено: $date";
     } else {
         $title = '## 📞 Contacts / Company Info';
         $rows = [
@@ -86,7 +86,7 @@ function contactsTable(string $lang, array $meta): string {
             ['Brands', $meta['brandA'].', '.$meta['brandB']],
             ['Website', '['.$meta['site'].']('.$meta['site'].')'],
         ];
-        $updated = "_Last updated: $date_";
+        $updated = "_Last updated: $date";
     }
     // Build Markdown table
     $md = $title."\n\n";

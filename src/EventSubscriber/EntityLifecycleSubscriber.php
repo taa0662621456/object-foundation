@@ -1,16 +1,19 @@
 <?php
+
 namespace ObjectFoundation\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
-use ObjectFoundation\Events\{EntityCreatedEvent, EntityUpdatedEvent, ConfigChangedEvent, SoftDeletedEvent};
+use ObjectFoundation\Events\{ConfigChangedEvent, EntityCreatedEvent, EntityUpdatedEvent, SoftDeletedEvent};
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Throwable;
 
 final readonly class EntityLifecycleSubscriber implements EventSubscriber
 {
-    public function __construct(private EventDispatcherInterface $dispatcher) {}
+    public function __construct(private EventDispatcherInterface $dispatcher)
+    {
+    }
 
     public function getSubscribedEvents(): array
     {

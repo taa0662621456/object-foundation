@@ -1,5 +1,8 @@
 <?php
+
 namespace ObjectFoundation\Interfaces;
-interface IpRestrictableInterface {
+
+interface IpRestrictableInterface
+{
     public function isIpAllowed(string $ip): bool;
 }

@@ -5,25 +5,28 @@
   "license": "MIT",
   "authors": [
     {
-      "name": "Oleksandr Tishchenko (with GPT)",
-      "email": "example@example.com"
+      "name": "Oleksandr Tishchenko",
+      "email": "taa0662621456@gmail.com",
+      "homepage": "https://smartresponsor.com",
+      "role": "Maintainer"
     }
   ],
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.3",
     "doctrine/orm": "^2.16 || ^3.0",
     "monolog/monolog": "^3.6",
-    "symfony/uid": "^6.4 || ^7.0",
-    "symfony/serializer": "^6.4 || ^7.0",
-    "symfony/validator": "^6.4 || ^7.0",
-    "symfony/console": "^6.4 || ^7.0",
-    "symfony/event-dispatcher": "^6.4 || ^7.0",
     "ext-openssl": "*",
-    "predis/predis": "^3.2"
+    "predis/predis": "^3.2",
+    "ramsey/uuid": "^4.7"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.6 || ^10.5",
-    "symfony/var-dumper": "^7.0"
+    "symfony/var-dumper": "^7.0",
+    "symfony/console": "^6.4 || ^7.0",
+    "symfony/yaml": "^6.4 || ^7.0",
+    "phpstan/phpstan": "^1.11",
+    "rector/rector": "^1.2",
+    "friendsofphp/php-cs-fixer": "^3.20"
   },
   "autoload": {
     "psr-4": {
@@ -42,12 +45,20 @@
   "minimum-stability": "stable",
   "prefer-stable": true,
   "scripts": {
-    "test": "phpunit"
+    "test:atomicity": [
+      "@php scripts/atomicity-check.php"
+    ]
   },
-  "bin": [
-    "bin/foundation"
+    "test": "phpunit --testdox",
+    "lint": [
+      "phpstan analyse src --level=8 --memory-limit=1G",
+      "rector process src --dry-run",
+      "php-cs-fixer fix --dry-run --diff"
+    ],
+    "bin": [
+      "bin/foundation"
   ],
-  "version": "2.5.0-beta",
+  "version": "2.7.1-beta",
   "extra": {
     "object-foundation-next-horizon": "visionary roadmap 1.5\u20133.0"
   },

@@ -1,14 +1,15 @@
 <?php
+
 namespace ObjectFoundation\Bridge\Symfony\Command;
 
+use ObjectFoundation\Ontology\Support\ManifestCollector;
 use ReflectionClass;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\Table;
-use ObjectFoundation\Ontology\Support\ManifestCollector;
 
 #[AsCommand(name: 'foundation:ontology:inspect', description: 'Inspect ontology: traits, interfaces, properties for given classes.')]
 final class FoundationOntologyInspectCommand extends Command
@@ -30,7 +31,7 @@ final class FoundationOntologyInspectCommand extends Command
             }
             $m = $collector->manifestFor($class);
             $ref = new ReflectionClass($class);
-            $props = array_map(fn($p) => '$'.$p->getName(), $ref->getProperties());
+            $props = array_map(fn ($p) => '$'.$p->getName(), $ref->getProperties());
 
             $output->writeln("\n<info>{$m['entity']}</info>");
             $table = new Table($output);

@@ -1,4 +1,5 @@
 <?php
+
 namespace ObjectFoundation\Cache;
 
 use ObjectFoundation\Ontology\Support\ManifestCollector;
@@ -29,7 +30,7 @@ final class ManifestCache
             return $hit['data'];
         }
         $data = $collector->manifestFor($fqcn);
-        $this->adapter->set($key, ['data'=>$data, 'ts'=>time()], $this->ttl);
+        $this->adapter->set($key, ['data' => $data, 'ts' => time()], $this->ttl);
         return $data;
     }
 
@@ -37,11 +38,16 @@ final class ManifestCache
     {
         $key = 'result:'.$cacheKey;
         $hit = $this->adapter->get($key);
-        if ($hit && ($hit['expires'] ?? 0) > time()) return $hit['data'];
+        if ($hit && ($hit['expires'] ?? 0) > time()) {
+            return $hit['data'];
+        }
         $data = $compute();
-        $this->adapter->set($key, ['data'=>$data, 'ts'=>time()], $this->ttl);
+        $this->adapter->set($key, ['data' => $data, 'ts' => time()], $this->ttl);
         return $data;
     }
 
-    public function clear(): void { $this->adapter->clear(); }
+    public function clear(): void
+    {
+        $this->adapter->clear();
+    }
 }
