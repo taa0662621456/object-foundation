@@ -21,22 +21,25 @@
         <env name="APP_DEBUG" value="1"/>
     </php>
 
-    <logging>
-        <testdoxText outputFile="php://stdout"/>
-        <coverage-clover outputFile="build/coverage.xml"/>
-        <coverage-html outputDirectory="build/coverage-html"/>
-    </logging>
-
     <testsuites>
         <testsuite name="ObjectFoundation Unit &amp; Kernel Tests">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
 
-    <coverage>
+    <!-- ✅ NEW FORMAT for PHPUnit 10 -->
+    <source>
         <include>
             <directory>src</directory>
         </include>
-    </coverage>
+    </source>
+
+    <logging>
+        <testdoxText outputFile="php://stdout"/>
+        <report>
+            <clover outputFile="build/coverage.xml"/>
+            <html outputDirectory="build/coverage-html"/>
+        </report>
+    </logging>
 
 </phpunit>
