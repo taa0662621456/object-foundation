@@ -9,6 +9,7 @@ use ObjectFoundation\Api\Observability\MetricsCollector;
 
 final class MetricsController
 {
+
     public function handle(Request $req): Response
     {
         if (class_exists(MetricsCollector::class)) {

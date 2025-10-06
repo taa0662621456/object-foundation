@@ -1,4 +1,5 @@
 <?php
+
 namespace ObjectFoundation\Api\Observability;
 
 use Redis;
@@ -26,8 +27,12 @@ final class MetricsCollector
             $pass = $parts['pass'] ?? null;
             $db   = isset($parts['path']) ? (int)trim($parts['path'], '/') : 0;
             $this->redis->connect($host, $port, 1.5);
-            if ($pass) $this->redis->auth($pass);
-            if ($db) $this->redis->select($db);
+            if ($pass) {
+                $this->redis->auth($pass);
+            }
+            if ($db) {
+                $this->redis->select($db);
+            }
         }
     }
 
@@ -40,8 +45,12 @@ final class MetricsCollector
             $this->redis->incrByFloat($this->prefix.'sum_latency', $durationMs);
             $this->redis->incr($this->prefix.'count_total');
             $this->redis->incr($this->prefix.'status:'.$status);
-            if ($cacheHit) $this->redis->incr($this->prefix.'cache_hit');
-            if ($authFail) $this->redis->incr($this->prefix.'auth_fail');
+            if ($cacheHit) {
+                $this->redis->incr($this->prefix.'cache_hit');
+            }
+            if ($authFail) {
+                $this->redis->incr($this->prefix.'auth_fail');
+            }
             return;
         }
         $data = $this->readFile();
@@ -55,6 +64,7 @@ final class MetricsCollector
 
     /**
      * @throws \RedisException
+     * @return array<string, mixed>
      */
     public function snapshot(): array
     {
@@ -67,7 +77,9 @@ final class MetricsCollector
             // collect common statuses
             foreach ([200,201,204,400,401,403,404,429,500] as $st) {
                 $v = (int)($this->redis->get($this->prefix.'status:'.$st) ?: 0);
-                if ($v) $statuses[(string)$st] = $v;
+                if ($v) {
+                    $statuses[(string)$st] = $v;
+                }
             }
             return [
                 'count_total' => $count,
@@ -75,7 +87,7 @@ final class MetricsCollector
                 'avg_latency' => $count ? $sum / $count : 0,
                 'status'      => $statuses,
                 'cache_hit'   => $cache,
-                'auth_fail'   => $authf
+                'auth_fail'   => $authf,
             ];
         }
         $data = $this->readFile();
@@ -85,24 +97,25 @@ final class MetricsCollector
         return $data;
     }
 
+    /** @return array<string, mixed> */
     public function toPrometheus(array $snap): string
     {
         $lines = [];
-        $lines[] = "# HELP of_requests_total Total number of HTTP requests";
-        $lines[] = "# TYPE of_requests_total counter";
-        $lines[] = "of_requests_total " . (int)($snap['count_total'] ?? 0);
-        $lines[] = "# HELP of_request_latency_ms_avg Average request latency in ms";
-        $lines[] = "# TYPE of_request_latency_ms_avg gauge";
-        $lines[] = "of_request_latency_ms_avg " . (float)($snap['avg_latency'] ?? 0);
-        $lines[] = "# HELP of_cache_hits_total Total cache hits";
-        $lines[] = "# TYPE of_cache_hits_total counter";
-        $lines[] = "of_cache_hits_total " . (int)($snap['cache_hit'] ?? 0);
-        $lines[] = "# HELP of_auth_fail_total Total auth failures";
-        $lines[] = "# TYPE of_auth_fail_total counter";
-        $lines[] = "of_auth_fail_total " . (int)($snap['auth_fail'] ?? 0);
+        $lines[] = '# HELP of_requests_total Total number of HTTP requests';
+        $lines[] = '# TYPE of_requests_total counter';
+        $lines[] = 'of_requests_total ' . (int)($snap['count_total'] ?? 0);
+        $lines[] = '# HELP of_request_latency_ms_avg Average request latency in ms';
+        $lines[] = '# TYPE of_request_latency_ms_avg gauge';
+        $lines[] = 'of_request_latency_ms_avg ' . (float)($snap['avg_latency'] ?? 0);
+        $lines[] = '# HELP of_cache_hits_total Total cache hits';
+        $lines[] = '# TYPE of_cache_hits_total counter';
+        $lines[] = 'of_cache_hits_total ' . (int)($snap['cache_hit'] ?? 0);
+        $lines[] = '# HELP of_auth_fail_total Total auth failures';
+        $lines[] = '# TYPE of_auth_fail_total counter';
+        $lines[] = 'of_auth_fail_total ' . (int)($snap['auth_fail'] ?? 0);
         if (!empty($snap['status'])) {
-            $lines[] = "# HELP of_status_code_total Total requests by HTTP status code";
-            $lines[] = "# TYPE of_status_code_total counter";
+            $lines[] = '# HELP of_status_code_total Total requests by HTTP status code';
+            $lines[] = '# TYPE of_status_code_total counter';
             foreach ($snap['status'] as $code => $cnt) {
                 $lines[] = "of_status_code_total{code=\"$code\"} " . (int)$cnt;
             }
@@ -110,16 +123,20 @@ final class MetricsCollector
         return implode("\n", $lines) . "\n";
     }
 
+    /** @return array<string, mixed> */
     private function readFile(): array
     {
-        if (!is_file($this->storage)) return [];
+        if (!is_file($this->storage)) {
+            return [];
+        }
         $raw = file_get_contents($this->storage);
-        $data = json_decode($raw ?: "[]", true);
+        $data = json_decode($raw ?: '[]', true);
         return is_array($data) ? $data : [];
     }
 
+    /** @return array<string, mixed> */
     private function writeFile(array $data): void
     {
-        file_put_contents($this->storage, json_encode($data, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+        file_put_contents($this->storage, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 }

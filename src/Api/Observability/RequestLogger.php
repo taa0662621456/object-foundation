@@ -6,7 +6,7 @@ use DateTimeImmutable;
 final class RequestLogger
 {
     private string $file;
-    private string $level;
+    private readonly string $level;
 
     public function __construct(?string $file = null, ?string $level = null)
     {
