@@ -1,14 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
- ─────────────────────────────────────────────────────────────────────────────
-   Smartresponsor / Object Foundation
-   PHPUnit Configuration — Offline Version
- ─────────────────────────────────────────────────────────────────────────────
-   No external XSD URI; validated locally if needed.
-   Works in PhpStorm without "URI not registered" warning.
- ─────────────────────────────────────────────────────────────────────────────
--->
-
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="phpunit.xsd"
@@ -24,7 +14,6 @@
     executionOrder="depends,defects"
 >
 
-    <!-- Environment -->
     <php>
         <env name="OBJECT_FOUNDATION_BRAND" value="Smartresponsor"/>
         <env name="OBJECT_FOUNDATION_OWNER" value="Marketing America Corp &amp; Partners"/>
@@ -32,21 +21,18 @@
         <env name="APP_DEBUG" value="1"/>
     </php>
 
-    <!-- Logging -->
     <logging>
         <testdoxText outputFile="php://stdout"/>
         <coverage-clover outputFile="build/coverage.xml"/>
         <coverage-html outputDirectory="build/coverage-html"/>
     </logging>
 
-    <!-- Testsuites -->
     <testsuites>
-        <testsuite name="ObjectFoundation Unit & Kernel Tests">
+        <testsuite name="ObjectFoundation Unit &amp; Kernel Tests">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
 
-    <!-- Coverage -->
     <coverage>
         <include>
             <directory>src</directory>
