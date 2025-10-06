@@ -90,14 +90,6 @@
     "object-foundation/ontology": "self.version",
     "object-foundation/api": "self.version"
   },
-
-  "replace": {
-    "object-foundation/core": "self.version",
-    "object-foundation/ontology": "self.version",
-    "object-foundation/api": "self.version",
-    "isponsor/object-foundation": "self.version"
-  },
-
   "extra": {
     "object-foundation-next-horizon": "visionary roadmap 1.5–3.0",
     "branch-alias": {
