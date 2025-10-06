@@ -1,4 +1,4 @@
-name: 🚀 CI/CD — Stable & Nightly Unified Pipeline (v4.0.0)
+name: 🚀 CI/CD — Unified Stable & Nightly Pipeline (v4.2.1)
 
 on:
   push:
@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
     steps:
       - name: 🧾 Checkout
         uses: actions/checkout@v4
@@ -99,6 +100,8 @@ jobs:
     permissions:
       contents: write
     if: ${{ github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master') }}
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
 
     steps:
       - name: 🧾 Checkout
@@ -129,79 +132,41 @@ jobs:
           fi
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "type=${TYPE}" >> $GITHUB_OUTPUT
-          echo "📦 Release tag: ${TAG} (${TYPE})"
 
       - name: 📦 Install dependencies
         run: composer install --no-interaction --no-progress
 
-      - name: 🔐 Composer audit
-        run: composer audit --no-interaction || echo "⚠️ Security advisories detected"
+      - name: 🧠 Generate OpenAPI specs
+        run: |
+          mkdir -p var/export
+          php bin/foundation foundation:api:openapi:generate -f json -o var/export/openapi.json || true
+          php bin/foundation foundation:api:openapi:generate -f yaml -o var/export/openapi.yaml || true
 
       - name: 🧱 Build distributable
         run: |
           mkdir -p dist
-          ZIP_NAME="${PROJECT_NAME}-${{ steps.tag.outputs.tag }}.zip"
+          ZIP_NAME="object-foundation-${{ steps.tag.outputs.tag }}.zip"
           zip -r "dist/${ZIP_NAME}" src/ bin/ composer.json LICENSE README.md CHANGELOG.md phpunit.xml.dist docs/ 2>/dev/null || true
-          echo "✅ Archive created: dist/${ZIP_NAME}"
 
-      - name: 🧠 Generate release notes
-        run: |
-          TAG=${{ steps.tag.outputs.tag }}
-          DATE=$(date +'%Y-%m-%d')
-          mkdir -p .github
-          if [ -f ".github/release_template.md" ]; then
-            export VERSION="$TAG"
-            export RELEASE_DATE="$DATE"
-            envsubst < .github/release_template.md > RELEASE_NOTES.md
-          else
-            echo "# 🧠 ${PROJECT_NAME} — ${TAG}" > RELEASE_NOTES.md
-            echo "_Auto-generated on ${DATE}_" >> RELEASE_NOTES.md
-          fi
-
-      - name: 🧾 Save release notes
-        run: |
-          mkdir -p docs/releases
-          cp RELEASE_NOTES.md "docs/releases/${{ steps.tag.outputs.tag }}.md"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/releases/${{ steps.tag.outputs.tag }}.md
-          git commit -m "docs: add release notes for ${{ steps.tag.outputs.tag }}" || echo "No new commit"
-          git push origin HEAD:master || echo "No push permissions"
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: object-foundation-${{ steps.tag.outputs.tag }}
+          path: |
+            dist/object-foundation-${{ steps.tag.outputs.tag }}.zip
+            var/export/openapi.json
+            var/export/openapi.yaml
+          retention-days: 30
 
       - name: 🏷️ Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
-          name: "${{ env.PROJECT_NAME }} ${{ steps.tag.outputs.tag }}"
-          body_path: RELEASE_NOTES.md
-          files: dist/${{ env.PROJECT_NAME }}-${{ steps.tag.outputs.tag }}.zip
+          name: "Object Foundation ${{ steps.tag.outputs.tag }}"
+          body: "Automated release via unified CI/CD."
+          files: dist/object-foundation-${{ steps.tag.outputs.tag }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🔄 Trigger Packagist update (stable only)
-        if: ${{ startsWith(steps.tag.outputs.tag, 'v') && secrets.PACKAGIST_USERNAME != '' && secrets.PACKAGIST_TOKEN != '' }}
-        run: |
-          curl -XPOST -H 'content-type:application/json' \
-            -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}' \
-            https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
-
-      - name: 🧹 Cleanup old nightly builds
-        if: ${{ startsWith(steps.tag.outputs.tag, 'nightly-') }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          NIGHTLY_TAGS=$(git tag --list 'nightly-*' --sort=-creatordate)
-          COUNT=$(echo "$NIGHTLY_TAGS" | wc -l)
-          KEEP=${KEEP_NIGHTLY:-7}
-          if [ "$COUNT" -gt "$KEEP" ]; then
-            REMOVE_COUNT=$((COUNT - KEEP))
-            REMOVE_TAGS=$(echo "$NIGHTLY_TAGS" | tail -n "$REMOVE_COUNT")
-            echo "🧹 Removing $REMOVE_COUNT old nightly builds..."
-            for TAG in $REMOVE_TAGS; do
-              git push --delete origin "$TAG" || true
-              gh release delete "$TAG" -y || true
-            done
-          fi
 
   docs:
     name: 📘 Deploy Docs (OpenAPI + phpDocumentor)
@@ -209,6 +174,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - name: 🧾 Checkout
         uses: actions/checkout@v4
@@ -226,12 +192,12 @@ jobs:
       - name: 📥 Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.PROJECT_NAME }}-${{ needs.release.outputs.tag }}
+          name: object-foundation-${{ needs.release.outputs.tag }}
           path: ./public/api/${{ needs.release.outputs.tag }}
 
       - name: 🌐 Prepare Swagger UI
         run: |
-          DEST="./public/api/${GITHUB_REF_NAME}"
+          DEST="./public/api/${{ needs.release.outputs.tag }}"
           mkdir -p "$DEST"
           if [ -f "$DEST/openapi.json" ]; then
             cat > "$DEST/index.html" <<'HTML'
@@ -247,7 +213,7 @@ jobs:
 
       - name: 📚 Generate phpDocumentor
         run: |
-          DEST="./public/dev/${GITHUB_REF_NAME}"
+          DEST="./public/dev/${{ needs.release.outputs.tag }}"
           mkdir -p "$DEST"
           if [ -f vendor/bin/phpdoc ]; then
             vendor/bin/phpdoc -d src -t "$DEST"
@@ -262,3 +228,42 @@ jobs:
           publish_dir: ./public
           publish_branch: gh-pages
           destination_dir: .
+
+  publish-latest:
+    name: 📦 Publish Latest ZIP to GitHub Pages
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 🧾 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📥 Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: object-foundation-${{ needs.release.outputs.tag }}
+          path: ./downloads/${{ needs.release.outputs.tag }}
+
+      - name: 📁 Copy latest zip
+        run: |
+          mkdir -p downloads
+          LATEST="downloads/latest.zip"
+          SRC="./downloads/${{ needs.release.outputs.tag }}/dist/object-foundation-${{ needs.release.outputs.tag }}.zip"
+          if [ -f "$SRC" ]; then
+            cp "$SRC" "$LATEST"
+          else
+            cp "./downloads/${{ needs.release.outputs.tag }}/object-foundation-${{ needs.release.outputs.tag }}.zip" "$LATEST"
+          fi
+          echo "Updated $LATEST"
+
+      - name: 🚀 Publish latest.zip to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./downloads
+          publish_branch: gh-pages
+          destination_dir: downloads
