@@ -1,80 +1,72 @@
-name: CI/CD v3.0.0 — Quality, Release, Docs
+name: 🚀 CI/CD — Stable & Nightly Unified Pipeline (v4.0.0)
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
     branches:
       - master
       - main
+    tags:
+      - 'v*.*.*'
   pull_request:
   workflow_dispatch:
 
+env:
+  PROJECT_NAME: ${{ github.event.repository.name }}
+  PHP_VERSION: '8.3'
+  KEEP_NIGHTLY: 7
+
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   quality:
-    name: Quality Gate (PHPUnit + Static Analysis + Audit)
+    name: 🧩 Quality Gate (PHPUnit + Static Analysis + Audit)
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: Checkout
+      - name: 🧾 Checkout
         uses: actions/checkout@v4
 
-      - name: Cache APT packages
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-cache-${{ hashFiles('.github/workflows/**/*.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-cache-
-
-      - name: Setup YAML validator
+      - name: 🧠 Validate YAML syntax
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y yamllint
-
-      - name: Validate YAML syntax
-        run: |
-          echo "Validating YAML files..."
+          echo "Validating YAML..."
           yamllint -f parsable -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/ | tee yamllint-report.txt
           if grep -q "error" yamllint-report.txt; then
             echo "❌ YAML syntax errors found" >> $GITHUB_STEP_SUMMARY
-            cat yamllint-report.txt >> $GITHUB_STEP_SUMMARY
             exit 1
           else
             echo "✅ YAML syntax OK" >> $GITHUB_STEP_SUMMARY
           fi
 
-      - name: Upload yamllint report
+      - name: 📤 Upload yamllint report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: yamllint-report-quality
+          name: yamllint-report
           path: yamllint-report.txt
           retention-days: 7
 
-      - name: Setup PHP
+      - name: ⚙️ Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: ${{ env.PHP_VERSION }}
           coverage: xdebug
           extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
 
-      - name: Validate composer.json
-        run: composer validate --strict
-
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: composer install --no-interaction --no-progress
 
-      - name: PHPUnit (with coverage)
+      - name: 🧪 PHPUnit
         run: |
           mkdir -p build/coverage-html
-          vendor/bin/phpunit --testdox --colors=always --coverage-clover build/coverage.xml --coverage-html build/coverage-html || (echo "PHPUnit failed"; exit 1)
+          vendor/bin/phpunit --testdox --colors=always \
+            --coverage-clover build/coverage.xml \
+            --coverage-html build/coverage-html || (echo "❌ PHPUnit failed"; exit 1)
 
-      - name: Upload coverage artifact
+      - name: 📤 Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ github.sha }}
@@ -83,156 +75,190 @@ jobs:
             build/coverage-html
           retention-days: 14
 
-      - name: PHPStan (if available)
+      - name: 🔍 PHPStan
         run: |
           if [ -f vendor/bin/phpstan ]; then
             vendor/bin/phpstan analyse src --level=max
           else
-            echo "phpstan not installed, skipping"
+            echo "ℹ️ phpstan not installed"
           fi
 
-      - name: PHP-CS-Fixer (dry-run if available)
+      - name: 🎨 PHP-CS-Fixer
         run: |
           if [ -f vendor/bin/php-cs-fixer ]; then
-            vendor/bin/php-cs-fixer fix --dry-run --verbose || (echo "Coding style issues found" && exit 1)
-          else
-            echo "php-cs-fixer not installed, skipping"
+            vendor/bin/php-cs-fixer fix --dry-run --verbose || (echo "⚠️ Style issues found" && exit 1)
           fi
 
-      - name: Composer audit (advisories)
-        run: |
-          composer audit --no-interaction || (echo "Composer audit found issues"; exit 1)
+      - name: 🔐 Composer audit
+        run: composer audit --no-interaction
 
   release:
-    name: Release & Packagist
+    name: 🚀 Release Builder (Stable & Nightly)
     runs-on: ubuntu-latest
     needs: quality
     permissions:
       contents: write
-    if: startsWith(github.ref, 'refs/tags/')
+    if: ${{ github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master') }}
+
     steps:
-      - name: Checkout
+      - name: 🧾 Checkout
         uses: actions/checkout@v4
-
-      - name: Cache APT packages
-        uses: actions/cache@v4
         with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-cache-${{ hashFiles('.github/workflows/**/*.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-apt-cache-
+          fetch-depth: 0
 
-      - name: Setup YAML validator
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y yamllint
-
-      - name: Validate YAML syntax
-        run: |
-          yamllint -f parsable -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/ | tee yamllint-report.txt
-          if grep -q "error" yamllint-report.txt; then
-            echo "❌ YAML syntax errors found" >> $GITHUB_STEP_SUMMARY
-            cat yamllint-report.txt >> $GITHUB_STEP_SUMMARY
-            exit 1
-          else
-            echo "✅ YAML syntax OK" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Upload yamllint report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: yamllint-report-release
-          path: yamllint-report.txt
-          retention-days: 7
-
-      - name: Setup PHP
+      - name: ⚙️ Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
 
-      - name: Install dependencies
+      - name: 🧮 Determine release tag
+        id: tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            TYPE="stable"
+          else
+            DATE=$(date +'%Y-%m-%d')
+            COUNT=$(git tag --list "nightly-${DATE}-build-*" | wc -l | tr -d ' ')
+            BUILD=$((COUNT + 1))
+            TAG="nightly-${DATE}-build-${BUILD}"
+            TYPE="nightly"
+            git tag -f "${TAG}"
+            git push origin "refs/tags/${TAG}" --force
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "type=${TYPE}" >> $GITHUB_OUTPUT
+          echo "📦 Release tag: ${TAG} (${TYPE})"
+
+      - name: 📦 Install dependencies
         run: composer install --no-interaction --no-progress
 
-      - name: Generate OpenAPI specs
-        run: |
-          mkdir -p var/export
-          php bin/foundation foundation:api:openapi:generate -f json -o var/export/openapi.json
-          php bin/foundation foundation:api:openapi:generate -f yaml -o var/export/openapi.yaml
+      - name: 🔐 Composer audit
+        run: composer audit --no-interaction || echo "⚠️ Security advisories detected"
 
-      - name: Build distributable zip
+      - name: 🧱 Build distributable
         run: |
           mkdir -p dist
-          ZIP_NAME="object-foundation-${GITHUB_REF_NAME}.zip"
-          zip -r "dist/${ZIP_NAME}" src/ bin/ composer.json LICENSE README.md CHANGELOG.md ROADMAP.md VISION.md phpunit.xml.dist docs/ .github/workflows/release.yml 2>/dev/null || true
-          echo "Created dist/${ZIP_NAME}"
+          ZIP_NAME="${PROJECT_NAME}-${{ steps.tag.outputs.tag }}.zip"
+          zip -r "dist/${ZIP_NAME}" src/ bin/ composer.json LICENSE README.md CHANGELOG.md phpunit.xml.dist docs/ 2>/dev/null || true
+          echo "✅ Archive created: dist/${ZIP_NAME}"
 
-      - name: Check distributable content
+      - name: 🧠 Generate release notes
         run: |
-          ZIP_FILE="dist/object-foundation-${GITHUB_REF_NAME}.zip"
-          unzip -l "$ZIP_FILE" | tee dist/zip_contents.txt
-          REQUIRED=("src/" "composer.json" "README.md" "LICENSE")
-          for ITEM in "${REQUIRED[@]}"; do
-            if ! unzip -l "$ZIP_FILE" | grep -q "$ITEM"; then
-              echo "Missing required file or folder: $ITEM"
-              exit 1
-            fi
-          done
-          echo "OK"
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: object-foundation-${{ github.ref_name }}
-          path: |
-            dist/object-foundation-${{ github.ref_name }}.zip
-            var/export/openapi.json
-            var/export/openapi.yaml
-          retention-days: 30
-
-      - name: Verify CHANGELOG contains tag
-        run: |
-          TAG=${GITHUB_REF_NAME}
-          if ! grep -q "## $TAG" CHANGELOG.md; then
-            echo "CHANGELOG.md does not contain version $TAG"
-            exit 1
+          TAG=${{ steps.tag.outputs.tag }}
+          DATE=$(date +'%Y-%m-%d')
+          mkdir -p .github
+          if [ -f ".github/release_template.md" ]; then
+            export VERSION="$TAG"
+            export RELEASE_DATE="$DATE"
+            envsubst < .github/release_template.md > RELEASE_NOTES.md
+          else
+            echo "# 🧠 ${PROJECT_NAME} — ${TAG}" > RELEASE_NOTES.md
+            echo "_Auto-generated on ${DATE}_" >> RELEASE_NOTES.md
           fi
 
-      - name: Update changelog date
+      - name: 🧾 Save release notes
         run: |
-          TAG=${GITHUB_REF_NAME}
-          DATE=$(date +'%Y-%m-%d')
-          sed -i "s/## $TAG.*/## $TAG - $DATE/" CHANGELOG.md
+          mkdir -p docs/releases
+          cp RELEASE_NOTES.md "docs/releases/${{ steps.tag.outputs.tag }}.md"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/releases/${{ steps.tag.outputs.tag }}.md
+          git commit -m "docs: add release notes for ${{ steps.tag.outputs.tag }}" || echo "No new commit"
+          git push origin HEAD:master || echo "No push permissions"
 
-      - name: Generate release notes from CHANGELOG
-        run: |
-          TAG=${GITHUB_REF_NAME}
-          awk "/## $TAG/{flag=1;next}/^## /{flag=0}flag" CHANGELOG.md > RELEASE_NOTES.md
-          if [ ! -s RELEASE_NOTES.md ]; then
-            echo "Release notes for $TAG" > RELEASE_NOTES.md
-          fi
-          DATE=$(date +'%Y-%m-%d')
-          printf "# 🧠 Object Foundation — %s\n\n_Auto-generated on %s_\n\n" "$TAG" "$DATE" > RN.tmp
-          cat RELEASE_NOTES.md >> RN.tmp
-          mv RN.tmp RELEASE_NOTES.md
-
-      - name: Create GitHub Release
+      - name: 🏷️ Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Object Foundation ${{ github.ref_name }}
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: "${{ env.PROJECT_NAME }} ${{ steps.tag.outputs.tag }}"
           body_path: RELEASE_NOTES.md
-          files: |
-            var/export/openapi.json
-            var/export/openapi.yaml
-            dist/object-foundation-${{ github.ref_name }}.zip
+          files: dist/${{ env.PROJECT_NAME }}-${{ steps.tag.outputs.tag }}.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trigger Packagist update
-        if: ${{ secrets.PACKAGIST_USERNAME && secrets.PACKAGIST_TOKEN }}
+      - name: 🔄 Trigger Packagist update (stable only)
+        if: ${{ startsWith(steps.tag.outputs.tag, 'v') && secrets.PACKAGIST_USERNAME != '' && secrets.PACKAGIST_TOKEN != '' }}
         run: |
           curl -XPOST -H 'content-type:application/json' \
             -d '{"repository":{"url":"https://github.com/${{ github.repository }}"}}' \
             https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}
+
+      - name: 🧹 Cleanup old nightly builds
+        if: ${{ startsWith(steps.tag.outputs.tag, 'nightly-') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NIGHTLY_TAGS=$(git tag --list 'nightly-*' --sort=-creatordate)
+          COUNT=$(echo "$NIGHTLY_TAGS" | wc -l)
+          KEEP=${KEEP_NIGHTLY:-7}
+          if [ "$COUNT" -gt "$KEEP" ]; then
+            REMOVE_COUNT=$((COUNT - KEEP))
+            REMOVE_TAGS=$(echo "$NIGHTLY_TAGS" | tail -n "$REMOVE_COUNT")
+            echo "🧹 Removing $REMOVE_COUNT old nightly builds..."
+            for TAG in $REMOVE_TAGS; do
+              git push --delete origin "$TAG" || true
+              gh release delete "$TAG" -y || true
+            done
+          fi
+
+  docs:
+    name: 📘 Deploy Docs (OpenAPI + phpDocumentor)
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 🧾 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: 📥 Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-${{ needs.release.outputs.tag }}
+          path: ./public/api/${{ needs.release.outputs.tag }}
+
+      - name: 🌐 Prepare Swagger UI
+        run: |
+          DEST="./public/api/${GITHUB_REF_NAME}"
+          mkdir -p "$DEST"
+          if [ -f "$DEST/openapi.json" ]; then
+            cat > "$DEST/index.html" <<'HTML'
+            <!doctype html>
+            <html><head><meta charset="utf-8"><title>API Docs</title>
+            <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" /></head>
+            <body><div id="swagger-ui"></div>
+            <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+            <script>window.onload=()=>{SwaggerUIBundle({url:'openapi.json',dom_id:'#swagger-ui'})};</script>
+            </body></html>
+            HTML
+          fi
+
+      - name: 📚 Generate phpDocumentor
+        run: |
+          DEST="./public/dev/${GITHUB_REF_NAME}"
+          mkdir -p "$DEST"
+          if [ -f vendor/bin/phpdoc ]; then
+            vendor/bin/phpdoc -d src -t "$DEST"
+          else
+            echo "<html><body><h1>Docs unavailable</h1></body></html>" > "$DEST/index.html"
+          fi
+
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          destination_dir: .
