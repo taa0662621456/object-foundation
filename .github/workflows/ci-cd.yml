@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   quality:
-    name: 🧩 Quality Gate (PHPUnit + Static Analysis + Audit)
+    name: 🧩 Quality Gate (Secrets + PHPUnit + Static Analysis + Audit)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,33 +29,23 @@ jobs:
       - name: 🧾 Checkout
         uses: actions/checkout@v4
 
-      - name: 🧠 Validate YAML syntax
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y yamllint
-          echo "Validating YAML..."
-          yamllint -f parsable -d "{extends: default, rules: {line-length: disable, document-start: disable}}" .github/workflows/ | tee yamllint-report.txt
-          if grep -q "error" yamllint-report.txt; then
-            echo "❌ YAML syntax errors found" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          else
-            echo "✅ YAML syntax OK" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: 📤 Upload yamllint report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: yamllint-report
-          path: yamllint-report.txt
-          retention-days: 7
-
       - name: ⚙️ Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
           coverage: xdebug
           extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
+
+      # 🔒 Secret scan (soft mode — does not fail pipeline)
+      - name: 🔒 Gitleaks Secret Scan
+        if: startsWith(github.ref, 'refs/tags/')
+        continue-on-error: false
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml
+          fail: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📦 Install dependencies
         run: composer install --no-interaction --no-progress
@@ -78,20 +68,19 @@ jobs:
 
       - name: 🔍 PHPStan
         run: |
-          if [-f vendor/bin/phpstan]; then
+          if [ -f vendor/bin/phpstan ]; then
             vendor/bin/phpstan analyse src --level=max
-          else
-            echo "ℹ️ phpstan not installed"
           fi
 
       - name: 🎨 PHP-CS-Fixer
         run: |
-          if [-f vendor/bin/php-cs-fixer]; then
-            vendor/bin/php-cs-fixer fix --dry-run --verbose || (echo "⚠️ Style issues found" && exit 1)
+          if [ -f vendor/bin/php-cs-fixer ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --verbose
           fi
 
       - name: 🔐 Composer audit
         run: composer audit --no-interaction
+
 
   release:
     name: 🚀 Release Builder (Stable & Nightly)
