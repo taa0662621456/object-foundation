@@ -36,6 +36,38 @@ jobs:
           coverage: xdebug
           extensions: mbstring, json, intl, pdo, xml, dom, curl, zip
 
+      # ⚡ Cache APT packages (yamllint, system tools)
+      - name: ⚡ Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/**/*.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
+      # ⚡ Cache Composer dependencies
+      - name: ⚡ Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache
+            vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      # ⚡ Cache PHPUnit and coverage data
+      - name: ⚡ Cache PHPUnit cache and coverage
+        uses: actions/cache@v4
+        with:
+          path: |
+            .phpunit.cache
+            build/coverage.xml
+            build/coverage-html
+          key: ${{ runner.os }}-phpunit-${{ hashFiles('phpunit.xml.dist') }}
+          restore-keys: |
+            ${{ runner.os }}-phpunit-
+
       # 🔒 Secret Scan (soft in branches, strict in releases)
       - name: 🔒 Gitleaks Secret Scan
         uses: gitleaks/gitleaks-action@v2
