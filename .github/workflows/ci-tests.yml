@@ -2,7 +2,7 @@ name: 🧪 CI Tests
 
 on:
   push:
-    branches: [ master, main, develop ]
+    branches: [master, main, develop]
   pull_request:
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
 
       - name: 🧪 Run PHPUnit tests
         run: |
-          if [ -f vendor/bin/phpunit ]; then
+          if [-f vendor/bin/phpunit]; then
             vendor/bin/phpunit --testdox --colors=always
             echo "✅ PHPUnit passed" >> $GITHUB_STEP_SUMMARY
           else

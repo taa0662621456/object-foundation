@@ -2,7 +2,7 @@ name: 🧹 Lint & Static Analysis
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [master, develop]
   pull_request:
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
 
       - name: 🔍 Run PHPStan
         run: |
-          if [ -f vendor/bin/phpstan ]; then
+          if [-f vendor/bin/phpstan]; then
             vendor/bin/phpstan analyse src --level=8 --memory-limit=1G --ansi
             echo "✅ PHPStan passed" >> $GITHUB_STEP_SUMMARY
           else
@@ -37,7 +37,7 @@ jobs:
 
       - name: 🧠 Run Rector (dry-run)
         run: |
-          if [ -f vendor/bin/rector ]; then
+          if [-f vendor/bin/rector]; then
             vendor/bin/rector process src --dry-run --no-progress-bar --ansi
             echo "✅ Rector dry-run passed" >> $GITHUB_STEP_SUMMARY
           else
@@ -46,7 +46,7 @@ jobs:
 
       - name: 🎨 Check code style
         run: |
-          if [ -f vendor/bin/php-cs-fixer ]; then
+          if [-f vendor/bin/php-cs-fixer]; then
             vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
             echo "✅ Code style OK" >> $GITHUB_STEP_SUMMARY
           else

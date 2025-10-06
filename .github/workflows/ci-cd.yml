@@ -78,7 +78,7 @@ jobs:
 
       - name: 🔍 PHPStan
         run: |
-          if [ -f vendor/bin/phpstan ]; then
+          if [-f vendor/bin/phpstan]; then
             vendor/bin/phpstan analyse src --level=max
           else
             echo "ℹ️ phpstan not installed"
@@ -86,7 +86,7 @@ jobs:
 
       - name: 🎨 PHP-CS-Fixer
         run: |
-          if [ -f vendor/bin/php-cs-fixer ]; then
+          if [-f vendor/bin/php-cs-fixer]; then
             vendor/bin/php-cs-fixer fix --dry-run --verbose || (echo "⚠️ Style issues found" && exit 1)
           fi
 
@@ -118,7 +118,7 @@ jobs:
       - name: 🧮 Determine release tag
         id: tag
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          if [["${GITHUB_REF}" == refs/tags/*]]; then
             TAG="${GITHUB_REF#refs/tags/}"
             TYPE="stable"
           else
@@ -199,7 +199,7 @@ jobs:
         run: |
           DEST="./public/api/${{ needs.release.outputs.tag }}"
           mkdir -p "$DEST"
-          if [ -f "$DEST/openapi.json" ]; then
+          if [-f "$DEST/openapi.json"]; then
             cat > "$DEST/index.html" <<'HTML'
             <!doctype html>
             <html><head><meta charset="utf-8"><title>API Docs</title>
@@ -215,7 +215,7 @@ jobs:
         run: |
           DEST="./public/dev/${{ needs.release.outputs.tag }}"
           mkdir -p "$DEST"
-          if [ -f vendor/bin/phpdoc ]; then
+          if [-f vendor/bin/phpdoc]; then
             vendor/bin/phpdoc -d src -t "$DEST"
           else
             echo "<html><body><h1>Docs unavailable</h1></body></html>" > "$DEST/index.html"
@@ -253,7 +253,7 @@ jobs:
           mkdir -p downloads
           LATEST="downloads/latest.zip"
           SRC="./downloads/${{ needs.release.outputs.tag }}/dist/object-foundation-${{ needs.release.outputs.tag }}.zip"
-          if [ -f "$SRC" ]; then
+          if [-f "$SRC"]; then
             cp "$SRC" "$LATEST"
           else
             cp "./downloads/${{ needs.release.outputs.tag }}/object-foundation-${{ needs.release.outputs.tag }}.zip" "$LATEST"
